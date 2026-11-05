@@ -17,6 +17,8 @@ use Filament\Tables\Table;
 class ProduitResource extends Resource
 {
     protected static ?string $model = Produit::class;
+    
+    protected static ?string $navigationLabel = 'Produits et stock';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

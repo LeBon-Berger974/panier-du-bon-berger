@@ -1,92 +1,95 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-    <head>
-        @include('partials.head')
-    </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden mr-2" icon="bars-2" inset="left" />
+<html lang="fr">
+<head>
+    @include('partials.head')
+</head>
 
-            <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
+<body class="min-h-screen bg-gray-50 text-gray-800">
 
-            <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
-                </flux:navbar.item>
-            </flux:navbar>
+    <header class="flex items-center justify-between bg-white px-8 py-5 shadow-sm">
+        <h1 class="text-2xl font-bold text-green-800">
+            🧺 Le Panier du Bon Berger
+        </h1>
 
-            <flux:spacer />
+        <nav class="flex items-center gap-4">
+            <a href="{{ url('/') }}"
+               class="rounded-lg border border-green-700 px-4 py-2 font-semibold text-green-800 transition hover:bg-green-700 hover:text-white">
+                Accueil
+            </a>
 
-            <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
-                <flux:tooltip :content="__('Search')" position="bottom">
-                    <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" href="#" :label="__('Search')" />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Repository')" position="bottom">
-                    <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="folder-git-2"
-                        href="https://github.com/laravel/livewire-starter-kit"
-                        target="_blank"
-                        :label="__('Repository')"
-                    />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Documentation')" position="bottom">
-                    <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="book-open-text"
-                        href="https://laravel.com/docs/starter-kits#livewire"
-                        target="_blank"
-                        :label="__('Documentation')"
-                    />
-                </flux:tooltip>
-            </flux:navbar>
+            <div class="relative">
+                <button id="profile-button" type="button"
+                    class="flex h-11 w-11 items-center justify-center rounded-full bg-green-700 font-bold text-white transition hover:bg-green-800">
+                    {{ auth()->user()->initials() }}
+                </button>
 
-            <x-desktop-user-menu :showTeam="false" />
+                <div id="profile-menu"
+                    class="absolute right-0 z-50 mt-3 hidden w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-xl">
 
-            <div class="max-lg:hidden">
-                <livewire:team-switcher />
+                    <div class="border-b px-3 py-3">
+                        <p class="font-semibold text-gray-800">
+                            {{ auth()->user()->name }}
+                        </p>
+                        <p class="truncate text-sm text-gray-500">
+                            {{ auth()->user()->email }}
+                        </p>
+                    </div>
+
+                    @if (auth()->user()->role === 'admin')
+                        <a href="{{ url('/admin') }}"
+                           class="block rounded-lg px-3 py-2 font-medium text-green-800 hover:bg-green-50">
+                            Administration
+                        </a>
+                    @else
+                        <a href="{{ url('/dashboard') }}"
+                           class="block rounded-lg px-3 py-2 font-medium text-green-800 hover:bg-green-50">
+                            Espace client
+                        </a>
+                    @endif
+
+                    <a href="{{ route('profile.edit') }}"
+                       class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100">
+                        Mes informations
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="w-full rounded-lg px-3 py-2 text-left text-red-600 hover:bg-red-50">
+                            Déconnexion
+                        </button>
+                    </form>
+                </div>
             </div>
-        </flux:header>
+        </nav>
+    </header>
 
-        <!-- Mobile Menu -->
-        <flux:sidebar collapsible="mobile" sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
-            </flux:sidebar.header>
+    <script>
+        const button = document.getElementById('profile-button');
+        const menu = document.getElementById('profile-menu');
 
-            <livewire:team-switcher />
+        button?.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard')  }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+        document.addEventListener('click', (event) => {
+            if (!button?.contains(event.target) && !menu?.contains(event.target)) {
+                menu?.classList.add('hidden');
+            }
+        });
+    </script>
 
-            <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
-        </flux:sidebar>
-
+    <main class="site-page">
         {{ $slot }}
+    </main>
 
-        <livewire:create-team-modal />
+    @persist('toast')
+        <flux:toast.group>
+            <flux:toast />
+        </flux:toast.group>
+    @endpersist
 
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
+    @fluxScripts
 
-        @fluxScripts
-    </body>
+</body>
 </html>

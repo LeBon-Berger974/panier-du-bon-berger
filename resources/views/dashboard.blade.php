@@ -1,20 +1,42 @@
-<x-layouts::app :title="__('Dashboard')">
-    <livewire:pages::teams.pending-invitations-modal />
+<x-layouts::app.header>
 
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
+    <div class="mx-auto w-full max-w-7xl px-6 py-12 lg:px-10">
+
+        <div class="mb-10">
+            <h1 class="text-3xl font-bold text-green-900">
+                Bienvenue {{ auth()->user()->name }} !
+            </h1>
+
+            <p class="mt-2 text-gray-600">
+                Retrouvez ici toutes vos informations et réservations.
+            </p>
         </div>
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+
+            <a href="#" class="site-card block transition hover:-translate-y-1 hover:shadow-lg">
+                <h2 class="site-title">Mes réservations</h2>
+                <p class="mt-3 text-gray-600">
+                    Consultez toutes vos réservations de paniers.
+                </p>
+            </a>
+
+            <a href="#" class="site-card block transition hover:-translate-y-1 hover:shadow-lg">
+                <h2 class="site-title">Nos paniers</h2>
+                <p class="mt-3 text-gray-600">
+                    Découvrez tous nos paniers disponibles.
+                </p>
+            </a>
+
+            <a href="{{ route('profile.edit') }}" class="site-card block transition hover:-translate-y-1 hover:shadow-lg">
+                <h2 class="site-title">Mes informations</h2>
+                <p class="mt-3 text-gray-600">
+                    Modifiez vos informations personnelles.
+                </p>
+            </a>
+
         </div>
+
     </div>
-</x-layouts::app>
+
+</x-layouts::app.header>

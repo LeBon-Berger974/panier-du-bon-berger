@@ -13,7 +13,7 @@ use Laravel\Passkeys\Actions\DeletePasskey;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 
-new #[Title('Security settings')] class extends Component {
+new #[Title('Paramètres de sécurité')] class extends Component {
     use PasswordValidationRules;
 
     public string $current_password = '';
@@ -21,9 +21,7 @@ new #[Title('Security settings')] class extends Component {
     public string $password_confirmation = '';
 
     public bool $canManageTwoFactor;
-
     public bool $twoFactorEnabled;
-
     public bool $requiresConfirmation;
 
     #[Locked]
@@ -40,9 +38,6 @@ new #[Title('Security settings')] class extends Component {
     #[Locked]
     public string $deletingPasskeyName = '';
 
-    /**
-     * Mount the component.
-     */
     public function mount(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
     {
         $this->canManageTwoFactor = Features::canManageTwoFactorAuthentication();
@@ -63,9 +58,6 @@ new #[Title('Security settings')] class extends Component {
         }
     }
 
-    /**
-     * Update the password for the currently authenticated user.
-     */
     public function updatePassword(): void
     {
         try {
@@ -85,12 +77,9 @@ new #[Title('Security settings')] class extends Component {
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        Flux::toast(variant: 'success', text: 'Mot de passe mis à jour.');
     }
 
-    /**
-     * Load the user's passkeys.
-     */
     public function loadPasskeys(): void
     {
         $this->passkeys = auth()->user()->passkeys()
@@ -107,9 +96,6 @@ new #[Title('Security settings')] class extends Component {
             ->toArray();
     }
 
-    /**
-     * Show the delete confirmation modal.
-     */
     public function confirmDelete(int $passkeyId): void
     {
         $passkey = auth()->user()->passkeys()->findOrFail($passkeyId);
@@ -119,9 +105,6 @@ new #[Title('Security settings')] class extends Component {
         $this->showDeleteModal = true;
     }
 
-    /**
-     * Delete the passkey.
-     */
     public function deletePasskey(DeletePasskey $deletePasskey): void
     {
         if (! $this->deletingPasskeyId) {
@@ -136,9 +119,6 @@ new #[Title('Security settings')] class extends Component {
         $this->loadPasskeys();
     }
 
-    /**
-     * Close the delete confirmation modal.
-     */
     public function closeDeleteModal(): void
     {
         $this->showDeleteModal = false;
@@ -146,18 +126,12 @@ new #[Title('Security settings')] class extends Component {
         $this->deletingPasskeyName = '';
     }
 
-    /**
-     * Handle the two-factor authentication enabled event.
-     */
     #[On('two-factor-enabled')]
     public function onTwoFactorEnabled(): void
     {
         $this->twoFactorEnabled = true;
     }
 
-    /**
-     * Disable two-factor authentication for the user.
-     */
     public function disable(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
     {
         $disableTwoFactorAuthentication(auth()->user());
@@ -169,30 +143,36 @@ new #[Title('Security settings')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <flux:heading level="2" class="sr-only">Paramètres de sécurité</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
+    <x-pages::settings.layout
+        :heading="'Modifier le mot de passe'"
+        :subheading="'Choisissez un mot de passe long et sécurisé pour protéger votre compte.'">
+
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
+
             <flux:input
                 wire:model="current_password"
-                :label="__('Current password')"
+                label="Mot de passe actuel"
                 type="password"
                 required
                 autocomplete="current-password"
                 viewable
             />
+
             <flux:input
                 wire:model="password"
-                :label="__('New password')"
+                label="Nouveau mot de passe"
                 type="password"
                 required
                 autocomplete="new-password"
                 passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
                 viewable
             />
+
             <flux:input
                 wire:model="password_confirmation"
-                :label="__('Confirm password')"
+                label="Confirmer le nouveau mot de passe"
                 type="password"
                 required
                 autocomplete="new-password"
@@ -202,29 +182,26 @@ new #[Title('Security settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
+                    Enregistrer
                 </flux:button>
             </div>
         </form>
 
         @if ($canManageTwoFactor)
             <section class="mt-12">
-                <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
-                <flux:subheading>{{ __('Manage your two-factor authentication settings') }}</flux:subheading>
+                <flux:heading>Authentification à deux facteurs</flux:heading>
+                <flux:subheading>Gérez les paramètres de votre authentification à deux facteurs.</flux:subheading>
 
                 <div class="flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
                     @if ($twoFactorEnabled)
                         <div class="space-y-4">
                             <flux:text>
-                                {{ __('You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.') }}
+                                Lors de votre connexion, un code de sécurité temporaire vous sera demandé. Vous pouvez le retrouver dans une application compatible TOTP sur votre téléphone.
                             </flux:text>
 
                             <div class="flex justify-start">
-                                <flux:button
-                                    variant="danger"
-                                    wire:click="disable"
-                                >
-                                    {{ __('Disable 2FA') }}
+                                <flux:button variant="danger" wire:click="disable">
+                                    Désactiver la double authentification
                                 </flux:button>
                             </div>
 
@@ -233,7 +210,7 @@ new #[Title('Security settings')] class extends Component {
                     @else
                         <div class="space-y-4">
                             <flux:text variant="subtle">
-                                {{ __('When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.') }}
+                                Lorsque vous activerez la double authentification, un code de sécurité vous sera demandé lors de chaque connexion. Ce code sera disponible dans une application compatible TOTP sur votre téléphone.
                             </flux:text>
 
                             <flux:modal.trigger name="two-factor-setup-modal">
@@ -241,7 +218,7 @@ new #[Title('Security settings')] class extends Component {
                                     variant="primary"
                                     wire:click="$dispatch('start-two-factor-setup')"
                                 >
-                                    {{ __('Enable 2FA') }}
+                                    Activer la double authentification
                                 </flux:button>
                             </flux:modal.trigger>
 
@@ -254,8 +231,8 @@ new #[Title('Security settings')] class extends Component {
 
         @if ($canManagePasskeys)
             <section class="mt-12">
-                <flux:heading>{{ __('Passkeys') }}</flux:heading>
-                <flux:subheading>{{ __('Manage your passkeys for passwordless sign-in') }}</flux:subheading>
+                <flux:heading>Clés d'accès</flux:heading>
+                <flux:subheading>Gérez vos clés d'accès pour vous connecter sans mot de passe.</flux:subheading>
 
                 <div class="mt-6 flex flex-col w-full mx-auto space-y-6 text-sm" wire:cloak>
                     <div class="border rounded-lg border-zinc-200 dark:border-zinc-700 overflow-hidden">
@@ -265,18 +242,22 @@ new #[Title('Security settings')] class extends Component {
                                     <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-800">
                                         <flux:icon.key class="size-5 text-zinc-500 dark:text-zinc-400" />
                                     </div>
+
                                     <div class="space-y-1">
                                         <div class="flex items-center gap-2.5">
                                             <p class="font-medium tracking-tight">{{ $passkey['name'] }}</p>
+
                                             @if ($passkey['authenticator'])
                                                 <flux:badge size="sm">{{ $passkey['authenticator'] }}</flux:badge>
                                             @endif
                                         </div>
+
                                         <p class="text-zinc-500 dark:text-zinc-400 text-xs">
-                                            {{ __('Added :time', ['time' => $passkey['created_at_diff']]) }}
+                                            Ajoutée {{ $passkey['created_at_diff'] }}
+
                                             @if ($passkey['last_used_at_diff'])
                                                 <span class="opacity-50 mx-1">/</span>
-                                                {{ __('Last used :time', ['time' => $passkey['last_used_at_diff']]) }}
+                                                Dernière utilisation : {{ $passkey['last_used_at_diff'] }}
                                             @endif
                                         </p>
                                     </div>
@@ -296,8 +277,9 @@ new #[Title('Security settings')] class extends Component {
                                 <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
                                     <flux:icon.key class="size-7 text-zinc-400 dark:text-zinc-500" />
                                 </div>
-                                <p class="font-medium">{{ __('No passkeys yet') }}</p>
-                                <flux:text class="mt-1">{{ __('Add a passkey to sign in without a password') }}</flux:text>
+
+                                <p class="font-medium">Aucune clé d'accès pour le moment</p>
+                                <flux:text class="mt-1">Ajoutez une clé d'accès pour vous connecter sans mot de passe.</flux:text>
                             </div>
                         @endforelse
                     </div>
@@ -316,26 +298,4 @@ new #[Title('Security settings')] class extends Component {
     >
         <div class="space-y-6">
             <div class="space-y-2">
-                <flux:heading size="lg">{{ __('Remove passkey') }}</flux:heading>
-                <flux:text>
-                    {{ __('Are you sure you want to remove the passkey ":name"? You will no longer be able to use it to sign in.', ['name' => $deletingPasskeyName]) }}
-                </flux:text>
-            </div>
-
-            <div class="flex gap-3 justify-end">
-                <flux:button
-                    variant="outline"
-                    wire:click="closeDeleteModal"
-                >
-                    {{ __('Cancel') }}
-                </flux:button>
-                <flux:button
-                    variant="danger"
-                    wire:click="deletePasskey"
-                >
-                    {{ __('Remove passkey') }}
-                </flux:button>
-            </div>
-        </div>
-    </flux:modal>
-</section>
+                <flux:heading size

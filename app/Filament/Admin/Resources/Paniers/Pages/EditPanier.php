@@ -14,6 +14,8 @@ use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Throwable;
+use App\Models\PanierReservation;
+use App\Models\PanierPreparationReservation;
 
 class EditPanier extends EditRecord
 {
@@ -199,14 +201,63 @@ class EditPanier extends EditRecord
 
                                 $panier->save();
 
-                                PanierPreparation::create([
+                                
+                                $preparation = PanierPreparation::create([
                                     'panier_id' => $panier->id,
                                     'panier_nom' => $panier->nom,
                                     'nombre' => $nombre,
                                     'composition' => $lignesHistorique,
                                 ]);
 
-                                return [
+                                // Affecter d'abord la préparation aux réservations
+                                // les plus anciennes encore en attente.
+                                $resteAPreparer = $nombre;
+
+                                $reservations = PanierReservation::query()
+                                    ->where('panier_id', $panier->id)
+                                    ->where('statut', 'reserve')
+                                    ->orderBy('created_at')
+                                    ->orderBy('id')
+                                    ->lockForUpdate()
+                                    ->get();
+
+                                foreach ($reservations as $reservation) {
+                                    if ($resteAPreparer <= 0) {
+                                       break;
+                                    }
+
+                                    $resteReservation = max(
+                                        0,
+                                        $reservation->nombre - $reservation->nombre_prepare
+                                    );
+
+                                    if ($resteReservation === 0) {
+                                        continue;
+                                    }
+
+                                    $nombreAffecte = min(
+                                        $resteAPreparer,
+                                        $resteReservation
+                                    );
+
+                                    PanierPreparationReservation::create([
+                                        'panier_preparation_id' => $preparation->id,
+                                        'panier_reservation_id' => $reservation->id,
+                                        'nombre' => $nombreAffecte,
+                                    ]);
+
+                                    $reservation->nombre_prepare += $nombreAffecte;
+
+                                    if ($reservation->nombre_prepare >= $reservation->nombre) {
+                                        $reservation->statut = 'prepare';
+                                    }
+
+    $reservation->save();
+
+    $resteAPreparer -= $nombreAffecte;
+}
+
+                               return [
                                     'succes' => true,
                                     'message' => $nombre
                                         . ' panier(s) préparé(s). '

@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Filament\Admin\Resources\Produits\Tables;
 
+use App\Models\Produit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 
 class ProduitsTable
@@ -19,34 +21,45 @@ class ProduitsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('unite')
-                    ->label('Unite')
-                    ->badge(),
-
                 TextColumn::make('saison')
                     ->label('Saison')
-                    ->placeholder('Non precisee'),
+                    ->placeholder('Non précisée'),
+
+                TextColumn::make('unite')
+                    ->label('Unité')
+                    ->badge(),
 
                 TextColumn::make('stock')
                     ->label('Stock')
                     ->numeric(decimalPlaces: 2)
-                    ->sortable()
-                    ->color(fn ($record) =>
-                        $record->stock <= $record->seuil_alerte
-                            ? 'danger'
-                            : 'success'
-                    ),
+                    ->sortable(),
 
                 TextColumn::make('seuil_alerte')
-                    ->label('Seuil alerte')
+                    ->label("Seuil d'alerte")
                     ->numeric(decimalPlaces: 2),
 
-                IconColumn::make('actif')
-                    ->label('Disponible')
-                    ->boolean(),
+                TextColumn::make('etat_stock')
+                    ->label('ETAT')
+                    ->state(fn ($record): string => match (true) {
+                        $record->stock <= 0 => 'Épuisé',
+                        $record->stock <= $record->seuil_alerte => 'Stock bas',
+                        default => 'En stock',
+                    })
+                    ->badge()
+                    ->color(fn ($record): string => match (true) {
+                        $record->stock <= 0 => 'danger',
+                        $record->stock <= $record->seuil_alerte => 'warning',
+                        default => 'success',
+                    }),
+
+                ToggleColumn::make('actif')
+                    ->label('Réservable')
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->sortable(),
 
                 TextColumn::make('updated_at')
-                    ->label('Derniere modification')
+                    ->label('Dernière modification')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -58,7 +71,7 @@ class ProduitsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->label('Supprimer la selection'),
+                        ->label('Supprimer la sélection'),
                 ]),
             ]);
     }
