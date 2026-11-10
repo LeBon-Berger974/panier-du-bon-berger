@@ -2,13 +2,10 @@
 
 namespace App\Models\Concerns;
 
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-
 trait CanAccessAdmin
 {
-    public function canAccessPanel(Panel $panel): bool
+    public function canAccessAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin');
     }
 }

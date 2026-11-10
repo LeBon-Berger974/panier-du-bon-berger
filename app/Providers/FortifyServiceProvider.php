@@ -42,7 +42,7 @@ class FortifyServiceProvider extends ServiceProvider
                 return route('home');
             }
 
-            return $user->role === 'admin'
+            return $user->hasRole('admin')
                 ? url('/admin')
                 : url('/dashboard');
         });

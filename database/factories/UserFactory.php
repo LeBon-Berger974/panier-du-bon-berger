@@ -30,11 +30,20 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => 'client',
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Assign the client role after creating the user.
+     */
+    protected function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->assignRole('client');
+        });
     }
 
     /**

@@ -6,8 +6,6 @@ use App\Models\Panier;
 use App\Models\PanierReservation;
 use App\Models\Produit;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -20,6 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class PaniersTable
 {
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -43,12 +42,12 @@ class PaniersTable
 
                 TextColumn::make('paniers_faisables')
                     ->label('Réalisables avec les ingrédients')
-                    ->state(fn (Panier $record): int => self::calculerPaniersFaisables($record))
+                    ->state(fn(Panier $record): int => self::calculerPaniersFaisables($record))
                     ->sortable(false),
 
                 TextColumn::make('paniers_reserves')
                     ->label('Réservations en attente')
-                    ->state(fn (Panier $record): int => (int) PanierReservation::query()
+                    ->state(fn(Panier $record): int => (int) PanierReservation::query()
                         ->where('panier_id', $record->id)
                         ->where('statut', 'reserve')
                         ->sum(DB::raw('nombre - nombre_prepare'))),
@@ -57,7 +56,14 @@ class PaniersTable
                     ->label('Réservable')
                     ->onColor('success')
                     ->offColor('danger')
-                    ->disabled(fn (Panier $record): bool => $record->produits()->count() === 0),
+                    ->disabled(fn(Panier $record): bool => $record->produits()->count() === 0)
+                    ->visible(fn(): bool => auth()->user()?->canUsePermission('baskets.manage') ?? false)
+                    ->beforeStateUpdated(function (): void {
+                        abort_unless(
+                            auth()->user()?->canUsePermission('baskets.manage'),
+                            403
+                        );
+                    }),
 
                 TextColumn::make('stock')
                     ->label('Paniers préparés')
@@ -66,12 +72,19 @@ class PaniersTable
             ])
             ->recordActions([
                 EditAction::make()
-                    ->label('Modifier'),
-
+                    ->label('Modifier')
+                    ->visible(
+                        fn(): bool =>
+                        auth()->user()?->canUsePermission('baskets.manage')
+                            || auth()->user()?->canUsePermission('preparations.view')
+                            || auth()->user()?->canUsePermission('preparations.create')
+                            || auth()->user()?->canUsePermission('preparations.cancel')
+                    ),
                 Action::make('reserver')
                     ->label('Ajouter une réservation')
                     ->icon('heroicon-o-calendar')
                     ->color('success')
+                    ->visible(fn(): bool => auth()->user()?->canUsePermission('reservations.create') ?? false)
                     ->schema([
                         TextInput::make('nombre')
                             ->label('Nombre de paniers à réserver')
@@ -82,6 +95,11 @@ class PaniersTable
                             ->required(),
                     ])
                     ->action(function (Panier $record, array $data): void {
+                        abort_unless(
+                            auth()->user()?->canUsePermission('reservations.create'),
+                            403
+                        );
+
                         $nombre = (int) $data['nombre'];
 
                         DB::transaction(function () use ($record, $nombre): void {
@@ -98,7 +116,7 @@ class PaniersTable
 
                             $composition = $panier->produits()
                                 ->get()
-                                ->map(fn (Produit $produit): array => [
+                                ->map(fn(Produit $produit): array => [
                                     'produit_id' => $produit->id,
                                     'nom' => $produit->nom,
                                     'quantite' => (float) $produit->pivot->quantite,
@@ -133,13 +151,9 @@ class PaniersTable
                             ->success()
                             ->send();
                     }),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
             ]);
     }
+
 
     /**
      * Calcule le nombre de paniers supplémentaires réalisables

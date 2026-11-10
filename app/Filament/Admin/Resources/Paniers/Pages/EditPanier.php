@@ -7,7 +7,6 @@ use App\Models\Panier;
 use App\Models\PanierPreparation;
 use App\Models\Produit;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -16,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use App\Models\PanierReservation;
 use App\Models\PanierPreparationReservation;
+use Filament\Facades\Filament;
 
 class EditPanier extends EditRecord
 {
@@ -26,7 +26,7 @@ class EditPanier extends EditRecord
         $data['composition'] = $this->getRecord()
             ->produits()
             ->get()
-            ->map(fn ($produit) => [
+            ->map(fn($produit) => [
                 'produit_id' => $produit->id,
                 'quantite' => $produit->pivot->quantite,
             ])
@@ -35,17 +35,47 @@ class EditPanier extends EditRecord
         return $data;
     }
 
+
     protected function handleRecordUpdate(
         Model $record,
         array $data
     ): Model {
-        $composition = $data['composition'] ?? [];
+        $user = auth()->user();
 
-        unset($data['composition']);
+        $canManage = $user?->canUsePermission('baskets.manage') ?? false;
+
+        $canManagePreparedStock =
+            Filament::getCurrentPanel()?->getId() === 'admin'
+            && $user?->hasRole('admin');
+
+        $allowedData = [];
+
+        if ($canManage) {
+            $allowedData = array_intersect_key($data, array_flip([
+                'nom',
+                'description',
+                'photo',
+                'prix',
+                'actif',
+            ]));
+        }
+
+        if ($canManagePreparedStock && array_key_exists('stock', $data)) {
+            $allowedData['stock'] = $data['stock'];
+        }
+
+        // Ne jamais remplacer la composition si elle n'a pas été autorisée.
+        $composition = $canManage && array_key_exists('composition', $data)
+            ? $data['composition']
+            : null;
+
+        if ($allowedData === [] && $composition === null) {
+            return $record->refresh();
+        }
 
         return DB::transaction(function () use (
             $record,
-            $data,
+            $allowedData,
             $composition
         ): Model {
             $panier = Panier::query()
@@ -53,22 +83,26 @@ class EditPanier extends EditRecord
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $panier->update($data);
-
-            $produits = [];
-
-            foreach ($composition as $ligne) {
-                if (
-                    ! empty($ligne['produit_id'])
-                    && isset($ligne['quantite'])
-                ) {
-                    $produits[$ligne['produit_id']] = [
-                        'quantite' => $ligne['quantite'],
-                    ];
-                }
+            if ($allowedData !== []) {
+                $panier->update($allowedData);
             }
 
-            $panier->produits()->sync($produits);
+            if ($composition !== null) {
+                $produits = [];
+
+                foreach ($composition as $ligne) {
+                    if (
+                        ! empty($ligne['produit_id'])
+                        && isset($ligne['quantite'])
+                    ) {
+                        $produits[$ligne['produit_id']] = [
+                            'quantite' => $ligne['quantite'],
+                        ];
+                    }
+                }
+
+                $panier->produits()->sync($produits);
+            }
 
             return $panier->refresh();
         });
@@ -81,6 +115,7 @@ class EditPanier extends EditRecord
                 ->label('Préparer des paniers')
                 ->icon('heroicon-o-archive-box')
                 ->color('success')
+                ->visible(fn(): bool => auth()->user()?->canUsePermission('preparations.create') ?? false)
                 ->schema([
                     TextInput::make('nombre')
                         ->label('Nombre de paniers à préparer')
@@ -96,6 +131,10 @@ class EditPanier extends EditRecord
                 )
                 ->modalSubmitActionLabel('Confirmer la préparation')
                 ->action(function (array $data, Panier $record): void {
+                    abort_unless(
+                        auth()->user()?->canUsePermission('preparations.create'),
+                        403
+                    );
                     $nombre = (int) $data['nombre'];
 
                     try {
@@ -143,7 +182,7 @@ class EditPanier extends EditRecord
                                     }
 
                                     $quantiteParPanier = (float)
-                                        $ligne->pivot->quantite;
+                                    $ligne->pivot->quantite;
 
                                     $quantiteTotale = round(
                                         $quantiteParPanier * $nombre,
@@ -151,7 +190,7 @@ class EditPanier extends EditRecord
                                     );
 
                                     $disponible = (float)
-                                        $produit->stock;
+                                    $produit->stock;
 
                                     if (
                                         $disponible + 0.00001
@@ -168,9 +207,9 @@ class EditPanier extends EditRecord
                                         'produit_id' => $produit->id,
                                         'produit_nom' => $produit->nom,
                                         'quantite_par_panier' =>
-                                            $quantiteParPanier,
+                                        $quantiteParPanier,
                                         'quantite_totale' =>
-                                            $quantiteTotale,
+                                        $quantiteTotale,
                                     ];
                                 }
 
@@ -189,7 +228,7 @@ class EditPanier extends EditRecord
 
                                     $produit->stock = round(
                                         (float) $produit->stock
-                                        - $ligne['quantite_totale'],
+                                            - $ligne['quantite_totale'],
                                         2
                                     );
 
@@ -201,7 +240,7 @@ class EditPanier extends EditRecord
 
                                 $panier->save();
 
-                                
+
                                 $preparation = PanierPreparation::create([
                                     'panier_id' => $panier->id,
                                     'panier_nom' => $panier->nom,
@@ -223,7 +262,7 @@ class EditPanier extends EditRecord
 
                                 foreach ($reservations as $reservation) {
                                     if ($resteAPreparer <= 0) {
-                                       break;
+                                        break;
                                     }
 
                                     $resteReservation = max(
@@ -252,12 +291,12 @@ class EditPanier extends EditRecord
                                         $reservation->statut = 'prepare';
                                     }
 
-    $reservation->save();
+                                    $reservation->save();
 
-    $resteAPreparer -= $nombreAffecte;
-}
+                                    $resteAPreparer -= $nombreAffecte;
+                                }
 
-                               return [
+                                return [
                                     'succes' => true,
                                     'message' => $nombre
                                         . ' panier(s) préparé(s). '
@@ -314,23 +353,28 @@ class EditPanier extends EditRecord
             )
                 ->label(
                     'Annuler préparation #'
-                    . $preparation->id
-                    . ' ('
-                    . $preparation->nombre
-                    . ' panier(s))'
+                        . $preparation->id
+                        . ' ('
+                        . $preparation->nombre
+                        . ' panier(s))'
                 )
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
+                ->visible(fn(): bool => auth()->user()?->canUsePermission('preparations.cancel') ?? false)
                 ->requiresConfirmation()
                 ->modalHeading('Annuler cette préparation ?')
                 ->modalDescription(
                     'Les quantités de produits consommées seront restituées. '
-                    . 'Cette opération ne pourra pas être répétée.'
+                        . 'Cette opération ne pourra pas être répétée.'
                 )
                 ->modalSubmitActionLabel('Confirmer l’annulation')
                 ->action(function (Panier $record) use (
                     $preparation
                 ): void {
+                    abort_unless(
+                        auth()->user()?->canUsePermission('preparations.cancel'),
+                        403
+                    );
                     try {
                         $resultat = DB::transaction(
                             function () use (
@@ -405,12 +449,12 @@ class EditPanier extends EditRecord
                                     }
 
                                     $produitId = (int)
-                                        $ligne['produit_id'];
+                                    $ligne['produit_id'];
 
                                     $quantite = (float)
-                                        $ligne['quantite_totale'];
+                                    $ligne['quantite_totale'];
 
-                                
+
                                     $quantitesArestaurer[$produitId] =
                                         ($quantitesArestaurer[$produitId] ?? 0)
                                         + $quantite;
@@ -455,7 +499,7 @@ class EditPanier extends EditRecord
 
                                     $produit->stock = round(
                                         (float) $produit->stock
-                                        + $quantite,
+                                            + $quantite,
                                         2
                                     );
 
@@ -517,7 +561,6 @@ class EditPanier extends EditRecord
                 });
         }
 
-        $actions[] = DeleteAction::make();
 
         return $actions;
     }

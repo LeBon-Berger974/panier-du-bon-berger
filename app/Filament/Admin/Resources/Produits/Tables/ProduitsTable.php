@@ -3,8 +3,6 @@
 namespace App\Filament\Admin\Resources\Produits\Tables;
 
 use App\Models\Produit;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -40,13 +38,13 @@ class ProduitsTable
 
                 TextColumn::make('etat_stock')
                     ->label('ETAT')
-                    ->state(fn ($record): string => match (true) {
+                    ->state(fn($record): string => match (true) {
                         $record->stock <= 0 => 'Épuisé',
                         $record->stock <= $record->seuil_alerte => 'Stock bas',
                         default => 'En stock',
                     })
                     ->badge()
-                    ->color(fn ($record): string => match (true) {
+                    ->color(fn($record): string => match (true) {
                         $record->stock <= 0 => 'danger',
                         $record->stock <= $record->seuil_alerte => 'warning',
                         default => 'success',
@@ -56,7 +54,14 @@ class ProduitsTable
                     ->label('Réservable')
                     ->onColor('success')
                     ->offColor('danger')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn(): bool => auth()->user()?->canUsePermission('products.toggle') ?? false)
+                    ->beforeStateUpdated(function (): void {
+                        abort_unless(
+                            auth()->user()?->canUsePermission('products.toggle'),
+                            403
+                        );
+                    }),
 
                 TextColumn::make('updated_at')
                     ->label('Dernière modification')
@@ -66,13 +71,13 @@ class ProduitsTable
             ])
             ->recordActions([
                 EditAction::make()
-                    ->label('Modifier'),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make()
-                        ->label('Supprimer la sélection'),
-                ]),
+                    ->label('Modifier')
+                    ->visible(
+                        fn(): bool =>
+                        auth()->user()?->canUsePermission('products.manage')
+                            || auth()->user()?->canUsePermission('stock.update')
+                            || auth()->user()?->canUsePermission('products.toggle')
+                    ),
             ]);
     }
 }

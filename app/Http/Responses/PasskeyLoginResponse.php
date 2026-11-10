@@ -10,7 +10,7 @@ class PasskeyLoginResponse implements PasskeyLoginResponseContract
 {
     public function toResponse($request): Response
     {
-        $redirect = $request->user()->role === 'admin'
+        $request->user()->hasRole('admin')
             ? '/admin'
             : '/dashboard';
 

@@ -14,7 +14,7 @@ class LoginResponse implements LoginResponseContract
             return new JsonResponse(['two_factor' => false], 200);
         }
 
-        if ($request->user()->role === 'admin') {
+        if ($request->user()->hasRole('admin')) {
             return redirect('/admin');
         }
 

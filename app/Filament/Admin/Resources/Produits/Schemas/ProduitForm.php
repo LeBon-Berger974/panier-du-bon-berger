@@ -15,7 +15,8 @@ class ProduitForm
             TextInput::make('nom')
                 ->label('Nom du produit')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             FileUpload::make('photo')
                 ->label('Photo du produit')
@@ -24,34 +25,40 @@ class ProduitForm
                 ->directory('produits')
                 ->visibility('public')
                 ->imageEditor()
-                ->maxSize(5120),
+                ->maxSize(5120)
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             TextInput::make('unite')
                 ->label('Unité')
                 ->required()
-                ->maxLength(100),
+                ->maxLength(100)
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             TextInput::make('saison')
                 ->label('Saison')
-                ->maxLength(100),
+                ->maxLength(100)
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             TextInput::make('stock')
                 ->label('Stock disponible')
                 ->numeric()
                 ->minValue(0)
                 ->default(0)
-                ->required(),
+                ->required()
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('stock.update')),
 
             TextInput::make('seuil_alerte')
                 ->label('Seuil d’alerte du stock')
                 ->numeric()
                 ->minValue(0)
                 ->default(0)
-                ->required(),
+                ->required()
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             Toggle::make('actif')
                 ->label('Produit actif')
-                ->default(true),
+                ->default(true)
+                ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.toggle')),
         ]);
     }
 }

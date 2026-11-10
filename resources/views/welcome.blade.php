@@ -43,7 +43,7 @@
                         </p>
                     </div>
 
-                    @if (auth()->user()->role === 'admin')
+                    @if (auth()->user()->hasRole('admin'))
                     <a href="{{ url('/admin') }}"
                         class="block rounded-lg px-3 py-2 font-medium text-green-800 hover:bg-green-50">
                         Administration
