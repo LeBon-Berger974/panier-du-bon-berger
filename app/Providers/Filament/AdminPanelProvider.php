@@ -4,11 +4,13 @@ namespace App\Providers\Filament;
 
 use App\Filament\Admin\Pages\AdminDashboard;
 use App\Filament\Admin\Resources\Commandes\CommandeResource;
+use App\Filament\Admin\Resources\ConfigurationsPaniers\ConfigurationPanierResource;
 use App\Filament\Admin\Resources\PointRelais\PointRelaisResource;
 use App\Filament\Admin\Resources\Produits\ProduitResource;
 use App\Filament\Admin\Resources\SessionsLivraison\SessionsLivraisonResource;
 use App\Filament\Admin\Resources\Users\UserResource;
 use App\Filament\Admin\Widgets\AdminStatsWidget;
+use App\Filament\Admin\Widgets\ActiviteRecenteWidget;
 use App\Filament\Admin\Widgets\LivraisonsApercuWidget;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
@@ -46,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->resources([
+                ConfigurationPanierResource::class,
                 SessionsLivraisonResource::class,
                 CommandeResource::class,
                 PointRelaisResource::class,
@@ -59,6 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AdminStatsWidget::class,
                 LivraisonsApercuWidget::class,
+                ActiviteRecenteWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

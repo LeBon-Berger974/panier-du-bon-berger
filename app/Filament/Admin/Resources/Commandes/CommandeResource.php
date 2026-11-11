@@ -68,6 +68,7 @@ class CommandeResource extends Resource
         return $table->columns([
             TextColumn::make('reference')->label('N°')->searchable()->sortable(),
             TextColumn::make('client.name')->label('Client')->searchable(),
+            TextColumn::make('configuration_panier_nom')->label('Configuration')->placeholder('Panier historique')->searchable(),
             TextColumn::make('sessionLivraison.date_livraison')->label('Livraison')->date('d/m/Y')->sortable(),
             TextColumn::make('mode_retrait')->label('Retrait')->formatStateUsing(fn (string $state): string => $state === 'ferme' ? 'Ferme' : 'Point relais'),
             TextColumn::make('pointRelais.nom')->label('Lieu'),

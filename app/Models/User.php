@@ -40,6 +40,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public const PREPARATEUR_PERMISSIONS = [
         'baskets.view' => 'Consulter les paniers',
         'baskets.manage' => 'Créer et modifier les paniers',
+        'deliveries.view' => 'Consulter les livraisons et configurations',
+        'deliveries.manage' => 'Gérer les livraisons et publier les configurations',
         'reservations.create' => 'Ajouter des réservations',
         'preparations.view' => 'Consulter l’historique des préparations',
         'preparations.create' => 'Préparer des paniers',

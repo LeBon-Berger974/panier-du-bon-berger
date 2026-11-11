@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\SessionsLivraison\Tables;
 
 use App\Models\Commande;
+use App\Models\DisponibiliteConfigurationPanier;
 use App\Models\SessionLivraison;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -42,22 +43,24 @@ class SessionsLivraisonTable
                         ->whereIn('statut', [Commande::A_PAYER, Commande::PAYEE, Commande::PREPAREE, Commande::AU_RELAIS, Commande::RETIREE])
                         ->sum('nombre_paniers')),
 
-                TextColumn::make('paniers_possibles')
-                    ->label('Possibles selon stock')
-                    ->state(function (SessionLivraison $record): int {
-                        $lignes = $record->compositions()->with('produit')->get();
-                        if ($lignes->isEmpty()) {
-                            return 0;
+                TextColumn::make('configurations_faisables')
+                    ->label('Configurations · paniers faisables')
+                    ->state(function (SessionLivraison $record): string {
+                        $configurations = $record->configurations()->with(['produits.produit'])->get();
+                        if ($configurations->isEmpty()) {
+                            return 'Aucune configuration';
                         }
 
-                        return (int) $lignes->map(function ($ligne): int {
-                            if (! $ligne->produit || (float) $ligne->quantite <= 0) {
-                                return 0;
-                            }
+                        $disponibilites = DisponibiliteConfigurationPanier::pour($configurations, $record);
 
-                            return (int) floor((float) $ligne->produit->stock / (float) $ligne->quantite);
-                        })->min();
-                    }),
+                        return $configurations->map(fn ($configuration): string => $configuration->nom
+                            .' · '.number_format((float) $configuration->prix_ht, 2, ',', ' ').' € HT'
+                            .' · '.($disponibilites[$configuration->id]['faisable'] ?? 0)
+                            .' faisable(s) · '.$configuration->statutPublication())
+                            ->join("\n");
+                    })
+                    ->listWithLineBreaks()
+                    ->wrap(),
 
                 TextColumn::make('capacite_max')
                     ->label('Capacité')

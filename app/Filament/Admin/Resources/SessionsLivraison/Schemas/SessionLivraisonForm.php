@@ -2,13 +2,12 @@
 
 namespace App\Filament\Admin\Resources\SessionsLivraison\Schemas;
 
-use App\Models\Produit;
+use App\Models\ConfigurationPanier;
 use App\Models\ReglagesSite;
 use App\Rules\DeliveryDayRule;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -85,37 +84,20 @@ class SessionLivraisonForm
                         ->minValue(1)
                         ->required(),
                 ]),
-
-            Section::make('Composition du panier de cette livraison')
-                ->description('La composition est enregistrée pour cette session et peut varier d’une livraison à l’autre.')
+            Section::make('Paniers proposés')
+                ->description('Choisissez les paniers déjà créés qui seront proposés pour cette livraison. Vous pouvez en sélectionner plusieurs.')
                 ->schema([
-                    Repeater::make('compositions')
-                        ->relationship()
-                        ->label('Produits et quantités par panier')
-                        ->required()
-                        ->minItems(1)
-                        ->schema([
-                            Select::make('produit_id')
-                                ->label('Produit')
-                                ->options(fn (): array => Produit::query()
-                                    ->where('actif', true)
-                                    ->where('stock', '>', 0)
-                                    ->orderBy('nom')
-                                    ->pluck('nom', 'id')
-                                    ->all())
-                                ->searchable()
-                                ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                ->required(),
-
-                            TextInput::make('quantite')
-                                ->label('Quantité par panier')
-                                ->numeric()
-                                ->minValue(0.001)
-                                ->required(),
-                        ])
-                        ->columns(2)
-                        ->addActionLabel('Ajouter un produit')
-                        ->reorderable(false),
+                    Select::make('configurations_selectionnees')
+                        ->label('Paniers')
+                        ->options(fn (): array => ConfigurationPanier::query()->orderBy('nom')->get()
+                            ->mapWithKeys(fn (ConfigurationPanier $configuration): array => [
+                                $configuration->id => $configuration->nom.' · '.number_format((float) $configuration->prix_ht, 2, ',', ' ').' € HT',
+                            ])
+                            ->all())
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->helperText('Utilisez la recherche pour trouver un panier par son nom.'),
                 ]),
         ]);
     }

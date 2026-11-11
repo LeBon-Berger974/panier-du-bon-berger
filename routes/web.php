@@ -11,6 +11,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->
 
 Route::get('/', [BoutiqueController::class, 'index'])->name('home');
 Route::get('/paniers', [BoutiqueController::class, 'panier'])->name('boutique.index');
+Route::get('/paniers/{configuration}', [BoutiqueController::class, 'configuration'])->whereNumber('configuration')->name('boutique.configuration');
 Route::get('/points-relais', [BoutiqueController::class, 'pointsRelais'])->name('relais.index');
 Route::post('/demande-point-relais', [BoutiqueController::class, 'demanderPointRelais'])->name('relais.demande');
 Route::get('/consigne', [BoutiqueController::class, 'consigne'])->name('consigne');

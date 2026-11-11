@@ -14,10 +14,19 @@ class LivraisonsApercuWidget extends Widget
 
     protected static ?int $sort = 1;
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+
+        return $user && (\Filament\Facades\Filament::getCurrentPanel()?->getId() === 'admin'
+            || $user->canUsePermission('deliveries.view')
+            || $user->canUsePermission('deliveries.manage'));
+    }
+
     protected function getViewData(): array
     {
         $sessions = SessionLivraison::query()
-            ->with('compositions.produit')
+            ->with(['compositions.produit', 'configurations.produits.produit'])
             ->whereDate('date_livraison', '>=', today())
             ->where('statut', '!=', SessionLivraison::STATUT_LIVREE)
             ->orderBy('date_livraison')

@@ -8,6 +8,6 @@
             <div class="mt-4 grid gap-2 sm:grid-cols-2">@forelse($relaisParSession->get($session->id, collect()) as $groupe)<div class="rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700"><div class="flex justify-between gap-2"><strong>{{ $groupe->pointRelais?->nom ?? 'Point relais' }}</strong><span>{{ $groupe->total }}</span></div>@if($groupe->total < ($groupe->pointRelais?->minimum_paniers ?? 5))<p class="mt-1 text-xs text-amber-500">Seuil relais non atteint</p>@endif</div>@empty<p class="text-xs text-gray-500">Aucune commande en point relais.</p>@endforelse</div>
         </article>
     @empty
-        <article class="fi-section rounded-xl border p-5"><h2 class="font-semibold">Prochaines livraisons</h2><p class="mt-2 text-sm text-gray-500">Aucune session de livraison n’a été créée.</p><a class="mt-3 inline-block text-sm text-amber-500" href="{{ route('filament.admin.resources.sessions-livraison.sessions-livraisons.create') }}">Créer une session</a></article>
+        <article class="fi-section rounded-xl border p-5"><h2 class="font-semibold">Prochaines livraisons</h2><p class="mt-2 text-sm text-gray-500">Aucune session de livraison n’a été créée.</p><a class="mt-3 inline-block text-sm text-amber-500" href="{{ url(\Filament\Facades\Filament::getCurrentPanel()?->getId() === 'preparateur' ? '/prepa/sessions-livraison/sessions-livraisons/create' : '/admin/sessions-livraison/sessions-livraisons/create') }}">Créer une session</a></article>
     @endforelse
 </section>

@@ -21,10 +21,10 @@
                 <section class="pbb-order-step">
                     <h2><span>1.</span> Choisissez la livraison</h2>
                     @forelse($sessions as $index=>$session)
-                    @php $ouverte=$session->reservationsOuvertes(); @endphp
+                    @php $restants=(int)($paniersDisponibles[$session->id]??0); $ouverte=$session->reservationsOuvertes() && $restants>0; $statut=$session->statut === \App\Models\SessionLivraison::STATUT_CLOTUREE || $session->cloture_reservations_at?->lte(now()) ? 'Clôturée' : ($restants===0 && $session->reservationsOuvertes() ? 'Complet' : ($ouverte ? 'Ouverte' : 'Ouverture prochaine')); @endphp
                     <label class="pbb-choice-card {{ $session->id === $selectedSessionId?'is-selected':'' }} {{ !$ouverte?'is-closed':'' }}">
-                        <input type="radio" name="session_livraison_id" value="{{ $session->id }}" data-open="{{ $ouverte?'1':'0' }}" @checked($session->id === $selectedSessionId) @disabled(!$ouverte) required>
-                        <span class="pbb-choice-dot"></span><span class="pbb-choice-copy"><strong>Livraison {{ $session->jour }} {{ $session->date_livraison->translatedFormat('d F') }}</strong><small>Réservation {{ $session->ouverture_reservations_at->translatedFormat('D d/m') }} — {{ $session->cloture_reservations_at->translatedFormat('D d/m') }}</small></span><span class="pbb-status {{ $ouverte?'pbb-status-open':'' }}">{{ $ouverte?'Ouverte':$session->statutLabel() }}</span>
+                        <input type="radio" name="session_livraison_id" value="{{ $session->id }}" data-open="{{ $ouverte?'1':'0' }}" data-available="{{ $restants }}" @checked($session->id === $selectedSessionId) @disabled(!$ouverte) required>
+                        <span class="pbb-choice-dot"></span><span class="pbb-choice-copy"><strong>Livraison {{ $session->jour }} {{ $session->date_livraison->translatedFormat('d F') }}</strong><small>Réservation {{ $session->ouverture_reservations_at->translatedFormat('D d/m') }} — {{ $session->cloture_reservations_at->translatedFormat('D d/m') }}@if($ouverte) · {{ $restants }} panier(s) disponible(s)@endif</small></span><span class="pbb-status {{ $ouverte?'pbb-status-open':'' }}">{{ $statut }}</span>
                     </label>
                     @empty<p class="pbb-muted">Aucune livraison à venir n’est ouverte.</p>@endforelse
                 </section>
@@ -32,7 +32,7 @@
                     <h2><span>2.</span> Composition prévue</h2>
                     @foreach($sessions as $session)
                     <div class="pbb-session-composition" data-session="{{ $session->id }}" @if($session->id !== $selectedSessionId) hidden @endif>
-                        @forelse($session->compositions as $ligne)<span class="pbb-product-chip">{{ $ligne->produit->nom }} <small>{{ rtrim(rtrim(number_format((float)$ligne->quantite,3,',',' '),'0'),',') }} {{ $ligne->produit->unite }}</small></span>@empty<p class="pbb-muted">La composition de ce panier n’est pas encore renseignée.</p>@endforelse
+                        @forelse($session->compositions as $ligne)<span class="pbb-product-chip">@if($ligne->produit->photo)<img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($ligne->produit->photo) }}" alt="" loading="lazy">@endif{{ $ligne->produit->nom }} <small>{{ rtrim(rtrim(number_format((float)$ligne->quantite,3,',',' '),'0'),',') }} {{ $ligne->produit->unite }}@if($ligne->produit->saison) · {{ $ligne->produit->saison }}@endif</small></span>@empty<p class="pbb-muted">La composition de ce panier n’est pas encore renseignée.</p>@endforelse
                     </div>
                     @endforeach
                 </section>
@@ -46,7 +46,7 @@
             </div>
             <aside class="pbb-order-summary">
                 <h2>Votre commande</h2>
-                <label class="pbb-quantity-control"><span>Nombre de paniers</span><span><button type="button" data-quantity="minus" aria-label="Retirer un panier">−</button><input id="pbb-quantity" name="nombre_paniers" type="number" value="1" min="1" max="20" required><button type="button" data-quantity="plus" aria-label="Ajouter un panier">+</button></span></label>
+                <label class="pbb-quantity-control"><span>Nombre de paniers</span><span><button type="button" data-quantity="minus" aria-label="Retirer un panier">−</button><input id="pbb-quantity" name="nombre_paniers" type="number" value="1" min="1" max="{{ min(20, (int)($paniersDisponibles[$selectedSessionId]??20)) }}" required><button type="button" data-quantity="plus" aria-label="Ajouter un panier">+</button></span></label>
                 <dl class="pbb-price-lines">
                     <div>
                         <dt>Panier</dt>
@@ -69,7 +69,8 @@
                         <dd><span id="pbb-total-ttc">{{ number_format(($prixPanierHt+($premiereCommande?$consigneHt:0))*(1+$tauxTva/100),2,',',' ') }}</span> €</dd>
                     </div>
                 </dl>
-                @auth<button class="pbb-button pbb-button-wide" type="submit" @disabled(!$checkoutDisponible)>Continuer vers la commande</button>@else<a class="pbb-button pbb-button-wide" href="{{ route('login') }}">Se connecter pour commander</a>@endauth
+                @if(!$reservationDisponible && $sessions->isNotEmpty())<p class="pbb-muted" role="status">Aucune livraison n’est actuellement ouverte aux réservations. Consultez les prochaines dates ci-dessus.</p>@endif
+                @auth<button class="pbb-button pbb-button-wide" type="submit" @disabled(!$checkoutDisponible || !$reservationDisponible)>Continuer vers la commande</button>@else<a class="pbb-button pbb-button-wide" href="{{ route('login') }}">Se connecter pour commander</a>@endauth
                 @if(!$checkoutDisponible)<p class="pbb-muted">Le paiement en ligne sera disponible lorsque les paramètres de paiement seront configurés.</p>@endif
                 <p class="pbb-muted">Le prix du panier est de {{ number_format($prixPanierHt,2,',',' ') }} € HT. La consigne est facturée à la première commande.</p>
             </aside>
@@ -104,7 +105,8 @@
         });
 
         function refreshOrder() {
-            let n = Math.max(1, Math.min(20, parseInt(qty.value || '1', 10)));
+            const maxQuantity = Math.max(1, Number(qty.max || 20));
+            let n = Math.max(1, Math.min(maxQuantity, parseInt(qty.value || '1', 10)));
             qty.value = n;
             const deposit = depositFirst ? depositHt * n : 0,
                 base = priceHt * n,
@@ -121,7 +123,11 @@
             qty.value = Number(qty.value) + (b.dataset.quantity === 'plus' ? 1 : -1);
             refreshOrder()
         }));
-        document.querySelectorAll('input[name="session_livraison_id"]').forEach(r => r.addEventListener('change', () => document.querySelectorAll('.pbb-session-composition').forEach(c => c.hidden = c.dataset.session !== r.value)));
+        document.querySelectorAll('input[name="session_livraison_id"]').forEach(r => r.addEventListener('change', () => {
+            document.querySelectorAll('.pbb-session-composition').forEach(c => c.hidden = c.dataset.session !== r.value);
+            qty.max = Math.max(1, Math.min(20, Number(r.dataset.available || 1)));
+            refreshOrder()
+        }));
 
         function syncRetrait() {
             document.querySelectorAll('input[name="point_relais_id"]').forEach(p => p.disabled = true);

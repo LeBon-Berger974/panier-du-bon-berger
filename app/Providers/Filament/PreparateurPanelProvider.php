@@ -3,7 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Resources\Commandes\CommandeResource;
+use App\Filament\Admin\Resources\ConfigurationsPaniers\ConfigurationPanierResource;
 use App\Filament\Admin\Resources\Produits\ProduitResource;
+use App\Filament\Admin\Resources\SessionsLivraison\SessionsLivraisonResource;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -15,6 +17,8 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use App\Filament\Admin\Widgets\LivraisonsApercuWidget;
+use App\Filament\Admin\Widgets\ActiviteRecenteWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -43,7 +47,9 @@ class PreparateurPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->resources([
                 CommandeResource::class,
+                ConfigurationPanierResource::class,
                 ProduitResource::class,
+                SessionsLivraisonResource::class,
             ])
             ->discoverPages(in: app_path('Filament/Preparateur/Pages'), for: 'App\Filament\Preparateur\Pages')
             ->pages([
@@ -52,6 +58,8 @@ class PreparateurPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Preparateur/Widgets'), for: 'App\Filament\Preparateur\Widgets')
             ->widgets([
                 AccountWidget::class,
+                LivraisonsApercuWidget::class,
+                ActiviteRecenteWidget::class,
                 FilamentInfoWidget::class,
             ])
             ->middleware([

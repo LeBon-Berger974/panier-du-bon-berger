@@ -16,6 +16,7 @@
         @forelse ($commandes as $commande)
             <article class="pbb-session">
                 <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-lg font-extrabold text-white">{{ $commande->reference }}</h2><span class="pbb-status pbb-status-open">{{ $commande->statut_label }}</span></div>
+                <p class="mt-2 font-semibold">{{ $commande->configuration_panier_nom ?: 'Panier' }}</p>
                 <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-4">
                     <div><dt class="text-[#9eaaa2]">Livraison</dt><dd class="font-semibold">{{ ucfirst($commande->sessionLivraison->jour) }} {{ $commande->sessionLivraison->date_livraison->format('d/m/Y') }}</dd></div>
                     <div><dt class="text-[#9eaaa2]">Retrait</dt><dd class="font-semibold">{{ $commande->pointRelais?->nom ?? 'À la ferme' }}</dd></div>

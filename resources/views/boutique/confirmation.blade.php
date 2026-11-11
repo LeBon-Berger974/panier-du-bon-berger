@@ -12,6 +12,7 @@
             <h1 class="mt-3 text-3xl font-black text-white">Paiement en cours de confirmation</h1><p class="mt-3 text-[#9eaaa2]">La confirmation de la banque peut prendre quelques secondes. Actualise cette page pour voir le statut à jour.</p>
         @endif
         <dl class="mt-8 grid gap-4 border-t border-[#293a30] pt-6 sm:grid-cols-2">
+            <div><dt class="text-sm text-[#9eaaa2]">Configuration</dt><dd class="mt-1 font-semibold">{{ $commande->configuration_panier_nom ?: 'Panier' }}</dd></div>
             <div><dt class="text-sm text-[#9eaaa2]">Retrait</dt><dd class="mt-1 font-semibold">{{ $commande->pointRelais?->nom ?? 'À la ferme' }}</dd></div>
             <div><dt class="text-sm text-[#9eaaa2]">Montant</dt><dd class="mt-1 font-semibold">{{ number_format((float) $commande->montant_total, 2, ',', ' ') }} €</dd></div>
             <div><dt class="text-sm text-[#9eaaa2]">Statut</dt><dd class="mt-1 font-semibold">{{ $commande->statut_label }}</dd></div>

@@ -19,9 +19,9 @@
 @endforeach
 </tbody></table>
 <h2>Commandes et retraits</h2>
-<table><thead><tr><th class="check">Fait</th><th>Référence</th><th>Client</th><th>Nombre</th><th>Retrait / composition spécifique</th></tr></thead><tbody>
+<table><thead><tr><th class="check">Fait</th><th>Référence</th><th>Client</th><th>Configuration</th><th>Nombre</th><th>Retrait</th></tr></thead><tbody>
 @foreach ($commandes as $commande)
-<tr><td>□</td><td>{{ $commande->reference }}</td><td>{{ $commande->client->name }}</td><td>{{ $commande->nombre_paniers }}</td><td>{{ $commande->mode_retrait === 'ferme' ? 'Ferme' : ($commande->pointRelais?->nom ?? 'Relais') }}</td></tr>
+<tr><td>□</td><td>{{ $commande->reference }}</td><td>{{ $commande->client->name }}</td><td>{{ $commande->configuration_panier_nom ?: 'Panier historique' }}</td><td>{{ $commande->nombre_paniers }}</td><td>{{ $commande->mode_retrait === 'ferme' ? 'Ferme' : ($commande->pointRelais?->nom ?? 'Relais') }}</td></tr>
 @endforeach
 </tbody></table>
 </body>

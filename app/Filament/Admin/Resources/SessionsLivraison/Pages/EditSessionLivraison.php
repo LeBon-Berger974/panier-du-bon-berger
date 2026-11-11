@@ -7,12 +7,38 @@ use App\Models\SessionLivraison;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Notifications\Notification;
 use Illuminate\Validation\ValidationException;
 use LogicException;
 
 class EditSessionLivraison extends EditRecord
 {
+    protected static ?string $title = 'Modifier une livraison';
+
     protected static string $resource = SessionsLivraisonResource::class;
+
+    /** @var array<int, int|string> */
+    protected array $configurationsSelectionnees = [];
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['configurations_selectionnees'] = $this->sessionLivraison()->configurations()->pluck('id')->all();
+
+        return $data;
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $this->configurationsSelectionnees = $data['configurations_selectionnees'] ?? [];
+        unset($data['configurations_selectionnees']);
+
+        return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        $this->sessionLivraison()->configurations()->sync($this->configurationsSelectionnees);
+    }
 
     protected function getHeaderActions(): array
     {
@@ -21,14 +47,16 @@ class EditSessionLivraison extends EditRecord
                 ->label('Ouvrir les réservations')
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalDescription('La session sera publiée. Les clients pourront réserver pendant la période définie dans ses horaires.')
+                ->modalDescription('Les clients pourront réserver les configurations activées sur le site pendant la période définie pour cette livraison.')
                 ->visible(fn (): bool => $this->sessionLivraison()->statut === SessionLivraison::STATUT_BROUILLON)
                 ->action(function (): void {
                     $session = $this->sessionLivraison();
 
-                    if ($session->compositions()->doesntExist()) {
+                    $configurations = $session->configurations()->get();
+
+                    if ($configurations->isEmpty() && $session->compositions()->doesntExist()) {
                         throw ValidationException::withMessages([
-                            'data.compositions' => 'Ajoutez la composition du panier avant d’ouvrir les réservations.',
+                            'data.configurations' => 'Préparez au moins une configuration de panier avant d’ouvrir les réservations.',
                         ]);
                     }
 
@@ -40,6 +68,7 @@ class EditSessionLivraison extends EditRecord
 
                     $session->update(['statut' => SessionLivraison::STATUT_OUVERTE]);
                     $this->refreshFormData(['statut']);
+                    Notification::make()->title('Réservations ouvertes')->body('Les paniers activés apparaîtront au catalogue selon leur mode de publication et leurs dates.')->success()->send();
                 }),
             Action::make('cloturerReservations')
                 ->label('Clôturer les réservations')
@@ -50,6 +79,7 @@ class EditSessionLivraison extends EditRecord
                 ->action(function (): void {
                     $this->sessionLivraison()->update(['statut' => SessionLivraison::STATUT_CLOTUREE]);
                     $this->refreshFormData(['statut']);
+                    Notification::make()->title('Réservations clôturées')->success()->send();
                 }),
             Action::make('marquerLivree')
                 ->label('Marquer livrée')

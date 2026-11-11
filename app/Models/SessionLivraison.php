@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -90,6 +91,12 @@ class SessionLivraison extends Model
     public function compositions(): HasMany
     {
         return $this->hasMany(CompositionPanier::class, 'session_livraison_id');
+    }
+
+    /** @return BelongsToMany<ConfigurationPanier, $this> */
+    public function configurations(): BelongsToMany
+    {
+        return $this->belongsToMany(ConfigurationPanier::class, 'configuration_panier_session_livraison')->withTimestamps();
     }
 
     public function reservationsOuvertes(): bool

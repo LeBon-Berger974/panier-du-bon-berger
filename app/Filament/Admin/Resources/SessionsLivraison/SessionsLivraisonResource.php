@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class SessionsLivraisonResource extends Resource
 {
@@ -22,11 +24,37 @@ class SessionsLivraisonResource extends Resource
 
     protected static ?string $navigationLabel = 'Livraisons';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
-    protected static ?string $modelLabel = 'session de livraison';
+    protected static ?string $modelLabel = 'livraison';
 
-    protected static ?string $pluralModelLabel = 'sessions de livraison';
+    protected static ?string $pluralModelLabel = 'livraisons';
+
+    public static function canViewAny(): bool
+    {
+        return (auth()->user()?->canUsePermission('deliveries.view') ?? false)
+            || (auth()->user()?->canUsePermission('deliveries.manage') ?? false);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->canUsePermission('deliveries.manage') ?? false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->canUsePermission('deliveries.manage') ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()?->canUsePermission('deliveries.manage') ?? false;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['configurations.produits.produit']);
+    }
 
     public static function form(Schema $schema): Schema
     {

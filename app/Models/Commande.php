@@ -22,7 +22,7 @@ class Commande extends Model
     public const ANNULEE = 'annulee';
 
     protected $fillable = [
-        'reference', 'user_id', 'session_livraison_id', 'point_relais_id',
+        'reference', 'user_id', 'session_livraison_id', 'point_relais_id', 'configuration_panier_id', 'configuration_panier_nom',
         'mode_retrait', 'nombre_paniers', 'prix_unitaire', 'montant_paniers',
         'montant_consigne', 'montant_total', 'montant_panier_ht', 'montant_consigne_ht', 'montant_tva', 'statut', 'composition',
         'payee_at', 'preparee_at', 'remise_relais_at', 'retiree_at', 'annulee_at', 'rappel_envoye_at',
@@ -59,6 +59,12 @@ class Commande extends Model
     public function sessionLivraison(): BelongsTo
     {
         return $this->belongsTo(SessionLivraison::class);
+    }
+
+    /** @return BelongsTo<ConfigurationPanier, $this> */
+    public function configurationPanier(): BelongsTo
+    {
+        return $this->belongsTo(ConfigurationPanier::class);
     }
 
     /** @return BelongsTo<PointRelais, $this> */
