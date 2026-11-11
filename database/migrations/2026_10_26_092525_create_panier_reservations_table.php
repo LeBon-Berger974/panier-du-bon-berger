@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->unsignedInteger('nombre');
             $table->unsignedInteger('nombre_prepare')->default(0);
-            
+
             // reserve = réservation en attente de préparation
             // prepare = réservation préparée
             // annule = réservation annulée

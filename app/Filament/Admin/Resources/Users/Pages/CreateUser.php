@@ -8,6 +8,7 @@ use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CreateUser extends CreateRecord
 {
@@ -18,8 +19,9 @@ class CreateUser extends CreateRecord
         return DB::transaction(function () use ($data) {
             $roleIds = $data['role_ids'] ?? [];
             $permissions = $data['permissions'] ?? [];
+            $pointRelaisIds = $data['point_relais_ids'] ?? [];
 
-            unset($data['role_ids'], $data['permissions']);
+            unset($data['role_ids'], $data['permissions'], $data['point_relais_ids']);
 
             // Le rôle préparateur ne peut pas être attribué manuellement.
             $preparateurRoleId = Role::where('name', 'preparateur')->value('id');
@@ -33,6 +35,10 @@ class CreateUser extends CreateRecord
 
             $user->syncRoles($roleIds);
             $user->syncPermissions($permissions);
+            if ($user->hasRole('responsable_relais') && empty($pointRelaisIds)) {
+                throw ValidationException::withMessages(['point_relais_ids' => 'Attribuez au moins un point relais à ce responsable.']);
+            }
+            $user->pointsRelaisAffectes()->sync($pointRelaisIds);
 
             return $user;
         });

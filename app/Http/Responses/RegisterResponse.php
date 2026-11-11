@@ -14,6 +14,6 @@ class RegisterResponse implements RegisterResponseContract
             return new JsonResponse(['two_factor' => false], 201);
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('verification.notice');
     }
 }

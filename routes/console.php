@@ -2,4 +2,9 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-// Aucune tâche planifiée pour le moment.
+Schedule::command('sessions-livraison:actualiser')
+    ->everyMinute()
+    ->withoutOverlapping();
+Schedule::command('commandes:envoyer-rappels')
+    ->dailyAt('10:00')
+    ->withoutOverlapping();

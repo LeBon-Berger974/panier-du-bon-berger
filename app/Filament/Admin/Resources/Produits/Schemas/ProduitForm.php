@@ -32,6 +32,7 @@ class ProduitForm
                 ->label('Unité')
                 ->required()
                 ->maxLength(100)
+                ->placeholder('À renseigner')
                 ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('products.manage')),
 
             TextInput::make('saison')
@@ -43,7 +44,7 @@ class ProduitForm
                 ->label('Stock disponible')
                 ->numeric()
                 ->minValue(0)
-                ->default(0)
+                ->default(5)
                 ->required()
                 ->disabled(fn (): bool => ! auth()->user()?->canUsePermission('stock.update')),
 

@@ -17,12 +17,21 @@ use Filament\Tables\Table;
 class ProduitResource extends Resource
 {
     protected static ?string $model = Produit::class;
-    
+
     protected static ?string $navigationLabel = 'Produits et stock';
+
+    protected static ?string $pluralModelLabel = 'produits et stock';
+
+    protected static ?int $navigationSort = 1;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'nom';
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->canUsePermission('products.view') ?? false;
+    }
 
     public static function form(Schema $schema): Schema
     {

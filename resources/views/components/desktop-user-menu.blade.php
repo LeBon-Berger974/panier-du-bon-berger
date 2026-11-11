@@ -1,7 +1,7 @@
 
 <flux:dropdown position="bottom" align="start">
     <button type="button" class="group flex w-full items-center rounded-lg p-1 hover:bg-zinc-800/5 dark:hover:bg-white/10" data-test="sidebar-menu-button">
-        <flux:avatar :initials="auth()->user()->initials()" size="sm" />
+        <flux:avatar :src="auth()->user()->avatarUrl()" :initials="auth()->user()->initials()" size="sm" />
         <div class="in-data-flux-sidebar-collapsed-desktop:hidden mx-2 grid flex-1 text-start text-sm leading-tight">
             <span class="truncate font-medium text-zinc-500 group-hover:text-zinc-800 dark:text-white/80 dark:group-hover:text-white">
                 {{ auth()->user()->name }}
@@ -13,7 +13,7 @@
     <flux:menu>
         <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
             <flux:avatar
-                :name="auth()->user()->name"
+                :src="auth()->user()->avatarUrl()" :name="auth()->user()->name"
                 :initials="auth()->user()->initials()"
             />
             <div class="grid flex-1 text-start text-sm leading-tight">

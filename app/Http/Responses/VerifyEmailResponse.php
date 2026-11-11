@@ -14,7 +14,7 @@ class VerifyEmailResponse implements VerifyEmailResponseContract
             return new JsonResponse('', 204);
         }
 
-        $request->user()->hasRole('admin')
+        $redirect = $request->user()->hasRole('admin')
             ? '/admin'
             : '/dashboard';
 

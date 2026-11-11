@@ -2,30 +2,37 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\CanAccessAdmin;
 use Database\Factories\UserFactory;
+use Filament\Facades\Filament;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-use Filament\Facades\Filament;
 
-#[Fillable(['name', 'email', 'password', 'permissions'])]
+/** @property array<int, string>|null $permissions */
+#[Fillable(['name', 'email', 'password', 'permissions', 'point_relais_favori_id', 'google_id', 'google_avatar_url', 'avatar_path'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use CanAccessAdmin, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * Liste des permissions disponibles pour les préparateurs.
@@ -33,6 +40,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
     public const PREPARATEUR_PERMISSIONS = [
         'baskets.view' => 'Consulter les paniers',
         'baskets.manage' => 'Créer et modifier les paniers',
+        'deliveries.view' => 'Consulter les livraisons et configurations',
+        'deliveries.manage' => 'Gérer les livraisons et publier les configurations',
         'reservations.create' => 'Ajouter des réservations',
         'preparations.view' => 'Consulter l’historique des préparations',
         'preparations.create' => 'Préparer des paniers',
@@ -43,9 +52,33 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
         'products.toggle' => 'Activer ou désactiver un produit',
     ];
 
+    /** @return BelongsToMany<Role, $this, Pivot, 'pivot'> */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
+    }
+
+    /** @return HasMany<Commande, $this> */
+    public function commandes(): HasMany
+    {
+        return $this->hasMany(Commande::class, 'user_id');
+    }
+
+    /** @return BelongsTo<PointRelais, $this> */
+    public function pointRelaisFavori(): BelongsTo
+    {
+        return $this->belongsTo(PointRelais::class, 'point_relais_favori_id');
+    }
+
+    /** @return BelongsToMany<PointRelais, $this, Pivot, 'pivot'> */
+    public function pointsRelaisAffectes(): BelongsToMany
+    {
+        return $this->belongsToMany(PointRelais::class, 'point_relais_user', 'user_id', 'point_relais_id');
+    }
+
+    public function canConsulterCommandesRelais(): bool
+    {
+        return $this->hasRole('responsable_relais') && $this->pointsRelaisAffectes()->exists();
     }
 
     public function hasRole(string $role): bool
@@ -73,8 +106,9 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
         return match ($panel) {
             'admin' => $this->hasRole('admin'),
 
-            'preparateur' => $this->hasRole('preparateur')
-                && $this->hasPermission($permission),
+            'preparateur' => ($this->hasRole('preparateur') && $this->hasPermission($permission))
+                || ($permission === 'relay.orders.view' && $this->canConsulterCommandesRelais())
+                || ($permission === 'relay.pickup' && $this->canConsulterCommandesRelais()),
 
             default => false,
         };
@@ -91,6 +125,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
     /**
      * Retourne les permissions disponibles.
      */
+    /** @return array<string, string> */
     public static function preparateurPermissions(): array
     {
         return self::PREPARATEUR_PERMISSIONS;
@@ -149,6 +184,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
     /**
      * Synchronise les rôles sélectionnés par l'administrateur.
      */
+    /** @param array<int, int|string> $roleIds */
     public function syncRoles(array $roleIds): static
     {
         DB::transaction(function () use ($roleIds) {
@@ -206,6 +242,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
      * Attribue les permissions et synchronise automatiquement
      * le rôle préparateur.
      */
+    /** @param array<int, mixed> $permissions */
     public function syncPermissions(array $permissions): static
     {
         $permissions = array_values(array_unique($permissions));
@@ -279,8 +316,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
         return match ($panel->getId()) {
             'admin' => $this->hasRole('admin'),
 
-            'preparateur' => $this->hasRole('preparateur')
-                && $this->hasAnyPermission(),
+            'preparateur' => ($this->hasRole('preparateur') && $this->hasAnyPermission())
+                || $this->canConsulterCommandesRelais(),
 
             default => false,
         };
@@ -296,12 +333,24 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Fila
         ];
     }
 
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
+    }
+
+    public function avatarUrl(): ?string
+    {
+        return filled($this->avatar_path)
+            ? Storage::disk('public')->url($this->avatar_path)
+            : null;
+    }
+
     public function initials(): string
     {
         $initials = Str::initials($this->name, true);
 
         return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1) . Str::substr($initials, -1)
+            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
 }

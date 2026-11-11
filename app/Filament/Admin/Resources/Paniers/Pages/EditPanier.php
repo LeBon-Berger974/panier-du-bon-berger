@@ -5,17 +5,17 @@ namespace App\Filament\Admin\Resources\Paniers\Pages;
 use App\Filament\Admin\Resources\Paniers\PanierResource;
 use App\Models\Panier;
 use App\Models\PanierPreparation;
+use App\Models\PanierPreparationReservation;
+use App\Models\PanierReservation;
 use App\Models\Produit;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Throwable;
-use App\Models\PanierReservation;
-use App\Models\PanierPreparationReservation;
-use Filament\Facades\Filament;
 
 class EditPanier extends EditRecord
 {
@@ -23,10 +23,15 @@ class EditPanier extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['composition'] = $this->getRecord()
+        $record = $this->getRecord();
+        if (! $record instanceof Panier) {
+            throw new \LogicException('Le panier à modifier est indisponible.');
+        }
+
+        $data['composition'] = $record
             ->produits()
             ->get()
-            ->map(fn($produit) => [
+            ->map(fn ($produit) => [
                 'produit_id' => $produit->id,
                 'quantite' => $produit->pivot->quantite,
             ])
@@ -34,7 +39,6 @@ class EditPanier extends EditRecord
 
         return $data;
     }
-
 
     protected function handleRecordUpdate(
         Model $record,
@@ -115,7 +119,7 @@ class EditPanier extends EditRecord
                 ->label('Préparer des paniers')
                 ->icon('heroicon-o-archive-box')
                 ->color('success')
-                ->visible(fn(): bool => auth()->user()?->canUsePermission('preparations.create') ?? false)
+                ->visible(fn (): bool => auth()->user()?->canUsePermission('preparations.create') ?? false)
                 ->schema([
                     TextInput::make('nombre')
                         ->label('Nombre de paniers à préparer')
@@ -197,19 +201,17 @@ class EditPanier extends EditRecord
                                         < $quantiteTotale
                                     ) {
                                         $manquants[] = $produit->nom
-                                            . ' : disponible '
-                                            . $disponible
-                                            . ', nécessaire '
-                                            . $quantiteTotale;
+                                            .' : disponible '
+                                            .$disponible
+                                            .', nécessaire '
+                                            .$quantiteTotale;
                                     }
 
                                     $lignesHistorique[] = [
                                         'produit_id' => $produit->id,
                                         'produit_nom' => $produit->nom,
-                                        'quantite_par_panier' =>
-                                        $quantiteParPanier,
-                                        'quantite_totale' =>
-                                        $quantiteTotale,
+                                        'quantite_par_panier' => $quantiteParPanier,
+                                        'quantite_totale' => $quantiteTotale,
                                     ];
                                 }
 
@@ -217,7 +219,7 @@ class EditPanier extends EditRecord
                                     return [
                                         'succes' => false,
                                         'message' => 'Stock insuffisant : '
-                                            . implode(' ; ', $manquants),
+                                            .implode(' ; ', $manquants),
                                     ];
                                 }
 
@@ -235,11 +237,9 @@ class EditPanier extends EditRecord
                                     $produit->save();
                                 }
 
-                                $panier->stock =
-                                    (int) $panier->stock + $nombre;
+                                $panier->stock = max(0, (int) $panier->stock + $nombre);
 
                                 $panier->save();
-
 
                                 $preparation = PanierPreparation::create([
                                     'panier_id' => $panier->id,
@@ -299,8 +299,8 @@ class EditPanier extends EditRecord
                                 return [
                                     'succes' => true,
                                     'message' => $nombre
-                                        . ' panier(s) préparé(s). '
-                                        . 'Les stocks et l’historique ont été mis à jour.',
+                                        .' panier(s) préparé(s). '
+                                        .'Les stocks et l’historique ont été mis à jour.',
                                 ];
                             }
                         );
@@ -349,23 +349,23 @@ class EditPanier extends EditRecord
 
         foreach ($preparations as $preparation) {
             $actions[] = Action::make(
-                'annuler_preparation_' . $preparation->id
+                'annuler_preparation_'.$preparation->id
             )
                 ->label(
                     'Annuler préparation #'
-                        . $preparation->id
-                        . ' ('
-                        . $preparation->nombre
-                        . ' panier(s))'
+                        .$preparation->id
+                        .' ('
+                        .$preparation->nombre
+                        .' panier(s))'
                 )
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('warning')
-                ->visible(fn(): bool => auth()->user()?->canUsePermission('preparations.cancel') ?? false)
+                ->visible(fn (): bool => auth()->user()?->canUsePermission('preparations.cancel') ?? false)
                 ->requiresConfirmation()
                 ->modalHeading('Annuler cette préparation ?')
                 ->modalDescription(
                     'Les quantités de produits consommées seront restituées. '
-                        . 'Cette opération ne pourra pas être répétée.'
+                        .'Cette opération ne pourra pas être répétée.'
                 )
                 ->modalSubmitActionLabel('Confirmer l’annulation')
                 ->action(function (Panier $record) use (
@@ -418,10 +418,7 @@ class EditPanier extends EditRecord
 
                                 $composition = $historique->composition;
 
-                                if (
-                                    ! is_array($composition)
-                                    || $composition === []
-                                ) {
+                                if ($composition === []) {
                                     return [
                                         'succes' => false,
                                         'message' => 'La composition enregistrée est absente ou invalide. Aucun stock n’a été modifié.',
@@ -432,8 +429,7 @@ class EditPanier extends EditRecord
 
                                 foreach ($composition as $ligne) {
                                     if (
-                                        ! is_array($ligne)
-                                        || empty($ligne['produit_id'])
+                                        empty($ligne['produit_id'])
                                         || ! isset(
                                             $ligne['quantite_totale']
                                         )
@@ -453,7 +449,6 @@ class EditPanier extends EditRecord
 
                                     $quantite = (float)
                                     $ligne['quantite_totale'];
-
 
                                     $quantitesArestaurer[$produitId] =
                                         ($quantitesArestaurer[$produitId] ?? 0)
@@ -487,9 +482,9 @@ class EditPanier extends EditRecord
                                     if (! $produits->has($id)) {
                                         return [
                                             'succes' => false,
-                                            'message' => 'Le produit #' . $id
-                                                . ' de cette préparation n’existe plus. '
-                                                . 'Aucun stock n’a été modifié.',
+                                            'message' => 'Le produit #'.$id
+                                                .' de cette préparation n’existe plus. '
+                                                .'Aucun stock n’a été modifié.',
                                         ];
                                     }
                                 }
@@ -507,9 +502,7 @@ class EditPanier extends EditRecord
                                 }
 
                                 if ($panier) {
-                                    $panier->stock =
-                                        (int) $panier->stock
-                                        - (int) $historique->nombre;
+                                    $panier->stock = max(0, (int) $panier->stock - (int) $historique->nombre);
 
                                     $panier->save();
                                 }
@@ -520,8 +513,8 @@ class EditPanier extends EditRecord
                                 return [
                                     'succes' => true,
                                     'message' => 'La préparation #'
-                                        . $historique->id
-                                        . ' a été annulée. Les stocks ont été restaurés.',
+                                        .$historique->id
+                                        .' a été annulée. Les stocks ont été restaurés.',
                                 ];
                             }
                         );
@@ -560,7 +553,6 @@ class EditPanier extends EditRecord
                     $this->refreshFormData(['stock']);
                 });
         }
-
 
         return $actions;
     }

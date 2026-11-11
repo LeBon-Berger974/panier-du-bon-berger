@@ -39,7 +39,7 @@ class UserFactory extends Factory
     /**
      * Assign the client role after creating the user.
      */
-    protected function configure(): static
+    public function configure(): static
     {
         return $this->afterCreating(function (User $user): void {
             $user->assignRole('client');

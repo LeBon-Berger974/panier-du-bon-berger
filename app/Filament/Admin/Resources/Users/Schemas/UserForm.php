@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
+use App\Models\PointRelais;
 use App\Models\Role;
 use App\Models\User;
 use Filament\Forms\Components\CheckboxList;
@@ -46,12 +47,24 @@ class UserForm
                 ->preload()
                 ->helperText('Le rôle préparateur est attribué automatiquement selon les permissions.'),
 
+            Select::make('point_relais_favori_id')
+                ->label('Point relais favori')
+                ->relationship(name: 'pointRelaisFavori', titleAttribute: 'nom')
+                ->searchable()
+                ->preload()
+                ->nullable(),
+
+            Select::make('point_relais_ids')->label('Points relais attribués au responsable')->multiple()
+                ->options(fn (): array => PointRelais::query()->orderBy('nom')->pluck('nom', 'id')->all())
+                ->searchable()->preload()
+                ->helperText('Utilisé uniquement si le rôle Responsable de point relais est attribué.'),
+
             CheckboxList::make('permissions')
                 ->label('Autorisations du préparateur')
                 ->options(User::preparateurPermissions())
                 ->columns(2)
                 ->bulkToggleable()
-                ->helperText('Coche uniquement les fonctionnalités que ce compte est autorisé à utiliser. Sans permission, le compte ne peut pas accéder au panneau préparateur.'),
+                ->helperText('Coche uniquement les fonctionnalités préparateur autorisées. Le responsable de point relais accède au panneau uniquement pour ses relais attribués.'),
         ]);
     }
 }

@@ -18,7 +18,6 @@ use Illuminate\Validation\ValidationException;
 
 class PaniersTable
 {
-
     public static function configure(Table $table): Table
     {
         return $table
@@ -42,12 +41,12 @@ class PaniersTable
 
                 TextColumn::make('paniers_faisables')
                     ->label('Réalisables avec les ingrédients')
-                    ->state(fn(Panier $record): int => self::calculerPaniersFaisables($record))
+                    ->state(fn (Panier $record): int => self::calculerPaniersFaisables($record))
                     ->sortable(false),
 
                 TextColumn::make('paniers_reserves')
                     ->label('Réservations en attente')
-                    ->state(fn(Panier $record): int => (int) PanierReservation::query()
+                    ->state(fn (Panier $record): int => (int) PanierReservation::query()
                         ->where('panier_id', $record->id)
                         ->where('statut', 'reserve')
                         ->sum(DB::raw('nombre - nombre_prepare'))),
@@ -56,8 +55,8 @@ class PaniersTable
                     ->label('Réservable')
                     ->onColor('success')
                     ->offColor('danger')
-                    ->disabled(fn(Panier $record): bool => $record->produits()->count() === 0)
-                    ->visible(fn(): bool => auth()->user()?->canUsePermission('baskets.manage') ?? false)
+                    ->disabled(fn (Panier $record): bool => $record->produits()->count() === 0)
+                    ->visible(fn (): bool => auth()->user()?->canUsePermission('baskets.manage') ?? false)
                     ->beforeStateUpdated(function (): void {
                         abort_unless(
                             auth()->user()?->canUsePermission('baskets.manage'),
@@ -74,8 +73,7 @@ class PaniersTable
                 EditAction::make()
                     ->label('Modifier')
                     ->visible(
-                        fn(): bool =>
-                        auth()->user()?->canUsePermission('baskets.manage')
+                        fn (): bool => auth()->user()?->canUsePermission('baskets.manage')
                             || auth()->user()?->canUsePermission('preparations.view')
                             || auth()->user()?->canUsePermission('preparations.create')
                             || auth()->user()?->canUsePermission('preparations.cancel')
@@ -84,7 +82,7 @@ class PaniersTable
                     ->label('Ajouter une réservation')
                     ->icon('heroicon-o-calendar')
                     ->color('success')
-                    ->visible(fn(): bool => auth()->user()?->canUsePermission('reservations.create') ?? false)
+                    ->visible(fn (): bool => auth()->user()?->canUsePermission('reservations.create') ?? false)
                     ->schema([
                         TextInput::make('nombre')
                             ->label('Nombre de paniers à réserver')
@@ -116,7 +114,7 @@ class PaniersTable
 
                             $composition = $panier->produits()
                                 ->get()
-                                ->map(fn(Produit $produit): array => [
+                                ->map(fn (Produit $produit): array => [
                                     'produit_id' => $produit->id,
                                     'nom' => $produit->nom,
                                     'quantite' => (float) $produit->pivot->quantite,
@@ -154,7 +152,6 @@ class PaniersTable
             ]);
     }
 
-
     /**
      * Calcule le nombre de paniers supplémentaires réalisables
      * en tenant compte des réservations qui ne sont pas encore préparées.
@@ -189,8 +186,8 @@ class PaniersTable
                     $reservation->nombre - $reservation->nombre_prepare
                 );
 
-                foreach ($reservation->composition as $ingredient) {
-                    if ((int) ($ingredient['produit_id'] ?? 0) === $produit->id) {
+                foreach ($reservation->composition ?? [] as $ingredient) {
+                    if ($ingredient['produit_id'] === $produit->id) {
                         $quantiteReservee +=
                             (float) ($ingredient['quantite'] ?? 0)
                             * $resteApreparer;

@@ -20,6 +20,7 @@ class PanierPreparationReservation extends Model
         ];
     }
 
+    /** @return BelongsTo<PanierPreparation, $this> */
     public function preparation(): BelongsTo
     {
         return $this->belongsTo(
@@ -28,6 +29,7 @@ class PanierPreparationReservation extends Model
         );
     }
 
+    /** @return BelongsTo<PanierReservation, $this> */
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(
