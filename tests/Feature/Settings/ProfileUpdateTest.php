@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -54,7 +55,7 @@ class ProfileUpdateTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    public function test_non_admin_cannot_delete_their_account(): void
     {
         $user = User::factory()->create();
 
@@ -64,26 +65,37 @@ class ProfileUpdateTest extends TestCase
             ->set('password', 'password')
             ->call('deleteUser');
 
-        $response
-            ->assertHasNoErrors()
-            ->assertRedirect('/');
+        $response->assertStatus(403);
+        $this->assertNotNull($user->fresh());
+        $this->assertAuthenticatedAs($user);
+    }
 
-        $this->assertNull($user->fresh());
+    public function test_admin_can_delete_their_account_with_the_correct_password(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrateur']));
+        $this->actingAs($admin);
+
+        $response = Livewire::test('pages::settings.delete-user-modal')
+            ->set('password', 'password')
+            ->call('deleteUser');
+
+        $response->assertHasNoErrors()->assertRedirect('/');
+        $this->assertNull($admin->fresh());
         $this->assertFalse(auth()->check());
     }
 
-    public function test_correct_password_must_be_provided_to_delete_account(): void
+    public function test_admin_must_provide_the_correct_password_to_delete_their_account(): void
     {
-        $user = User::factory()->create();
-
-        $this->actingAs($user);
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrateur']));
+        $this->actingAs($admin);
 
         $response = Livewire::test('pages::settings.delete-user-modal')
             ->set('password', 'wrong-password')
             ->call('deleteUser');
 
         $response->assertHasErrors(['password']);
-
-        $this->assertNotNull($user->fresh());
+        $this->assertNotNull($admin->fresh());
     }
 }

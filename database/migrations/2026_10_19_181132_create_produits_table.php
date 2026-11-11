@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('produits', function (Blueprint $table) {
-          $table->id();
-          $table->string('nom');
-          $table->string('photo')->nullable();
-          $table->enum('unite', ['kg', 'botte', 'piece'])->default('piece');
-          $table->string('saison')->nullable();
-          $table->decimal('stock', 10, 2)->default(0);
-          $table->decimal('seuil_alerte', 10, 2)->default(0);
-          $table->boolean('actif')->default(true);
-          $table->timestamps();
-      });
+            $table->id();
+            $table->string('nom');
+            $table->string('photo')->nullable();
+            $table->enum('unite', ['kg', 'botte', 'piece'])->default('piece');
+            $table->string('saison')->nullable();
+            $table->decimal('stock', 10, 2)->default(0);
+            $table->decimal('seuil_alerte', 10, 2)->default(0);
+            $table->boolean('actif')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Users\Tables;
 
+use App\Models\MouvementConsigne;
+use App\Models\User;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -26,6 +28,25 @@ class UsersTable
                 TextColumn::make('roles.label')
                     ->label('Rôles')
                     ->badge(),
+
+                TextColumn::make('pointRelaisFavori.nom')
+                    ->label('Relais favori')
+                    ->placeholder('—'),
+
+                TextColumn::make('contenants_consignes')
+                    ->label('Contenants chez le client')
+                    ->state(function (User $record): int {
+                        $mouvements = MouvementConsigne::query()
+                            ->whereHas('commande', fn ($query) => $query->where('user_id', $record->id)->whereNotIn('statut', ['a_payer', 'annulee']))
+                            ->get();
+
+                        return max(0,
+                            (int) $mouvements->whereIn('type', ['pret', 'depot'])->sum('quantite')
+                            - (int) $mouvements->where('type', 'retour')->sum('quantite')
+                            - (int) $mouvements->where('type', 'perdu')->sum('quantite'),
+                        );
+                    })
+                    ->sortable(false),
 
                 TextColumn::make('created_at')
                     ->label('Inscription')

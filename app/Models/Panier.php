@@ -25,11 +25,12 @@ class Panier extends Model
         ];
     }
 
+    /** @return BelongsToMany<Produit, $this, PanierProduit, 'pivot'> */
     public function produits(): BelongsToMany
     {
         return $this->belongsToMany(
             Produit::class,
             'panier_produits'
-        )->withPivot('quantite')->withTimestamps();
+        )->using(PanierProduit::class)->withPivot('quantite')->withTimestamps();
     }
 }

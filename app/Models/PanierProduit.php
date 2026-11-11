@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class PanierProduit extends Model
+/** @property string $quantite */
+class PanierProduit extends Pivot
 {
     protected $table = 'panier_produits';
 
@@ -23,11 +23,13 @@ class PanierProduit extends Model
         ];
     }
 
+    /** @return BelongsTo<Panier, $this> */
     public function panier(): BelongsTo
     {
         return $this->belongsTo(Panier::class);
     }
 
+    /** @return BelongsTo<Produit, $this> */
     public function produit(): BelongsTo
     {
         return $this->belongsTo(Produit::class);

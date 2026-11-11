@@ -17,7 +17,7 @@ class RegistrationTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_are_registered_and_sent_to_email_verification(): void
     {
         $response = $this->post(route('register.store'), [
             'name' => 'John Doe',
@@ -26,11 +26,12 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $user = User::where('email', 'test@example.com')->first();
+        $user = User::where('email', 'test@example.com')->firstOrFail();
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('dashboard', absolute: false));
+            ->assertRedirect(route('verification.notice'));
 
-        $this->assertAuthenticated();
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse($user->hasVerifiedEmail());
     }
 }

@@ -9,6 +9,8 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use LogicException;
 
 class EditUser extends EditRecord
 {
@@ -16,25 +18,30 @@ class EditUser extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['role_ids'] = $this->record->roles()
+        $record = $this->editedUser();
+        $data['role_ids'] = $record->roles()
             ->where('roles.name', '!=', 'preparateur')
             ->pluck('roles.id')
             ->all();
 
-        $data['permissions'] = $this->record->permissions ?? [];
+        $data['permissions'] = $record->permissions ?? [];
+        $data['point_relais_ids'] = $record->pointsRelaisAffectes()->pluck('points_relais.id')->all();
 
         return $data;
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        return DB::transaction(function () use ($record, $data) {
-            /** @var User $record */
+        if (! $record instanceof User) {
+            throw new LogicException('Le compte à modifier est indisponible.');
+        }
 
+        return DB::transaction(function () use ($record, $data) {
             $roleIds = $data['role_ids'] ?? [];
             $permissions = $data['permissions'] ?? [];
+            $pointRelaisIds = $data['point_relais_ids'] ?? [];
 
-            unset($data['role_ids'], $data['permissions']);
+            unset($data['role_ids'], $data['permissions'], $data['point_relais_ids']);
 
             $wasPreparateur = $record->hasRole('preparateur');
 
@@ -60,6 +67,10 @@ class EditUser extends EditRecord
 
             $record->syncRoles($roleIds);
             $record->syncPermissions($permissions);
+            if ($record->hasRole('responsable_relais') && empty($pointRelaisIds)) {
+                throw ValidationException::withMessages(['point_relais_ids' => 'Attribuez au moins un point relais à ce responsable.']);
+            }
+            $record->pointsRelaisAffectes()->sync($pointRelaisIds);
 
             return $record;
         });
@@ -71,5 +82,16 @@ class EditUser extends EditRecord
             ViewAction::make()
                 ->label('Consulter'),
         ];
+    }
+
+    private function editedUser(): User
+    {
+        $record = $this->getRecord();
+
+        if (! $record instanceof User) {
+            throw new LogicException('Le compte à modifier est indisponible.');
+        }
+
+        return $record;
     }
 }

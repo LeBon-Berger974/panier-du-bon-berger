@@ -13,9 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use App\Models\Produit;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 
 class PanierResource extends Resource
 {

@@ -1,0 +1,28 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@source '../../../../app/Filament/Admin/**/*.php';
+@source '../../../../app/Filament/Preparateur/**/*.php';
+@source '../../../../resources/views/filament/**/*.blade.php';
+
+.dark .fi-body,.dark .fi-layout,.dark .fi-main-ctn{background:#0d1713;color:#edf1ec}
+.dark .fi-sidebar,.dark .fi-topbar{background:#101b16;border-color:#293a30}
+.dark .fi-sidebar-nav-groups,.dark .fi-sidebar-header{background:#101b16}
+.dark .fi-main{background:#0d1713}
+.dark .fi-section,.dark .fi-ta-ctn,.dark .fi-wi-stats-overview-stat,.dark .fi-ta-header-ctn,.dark .fi-ta-content-ctn,.dark .fi-modal-window,.dark .fi-dropdown-panel,.dark .fi-fo-repeater-item{background:#14211b;border-color:#293a30;color:#edf1ec}
+.dark .fi-ta-header-cell,.dark .fi-fo-field-wrp-label,.dark .fi-section-header-heading,.dark .fi-wi-stats-overview-stat-label{color:#cbd4cd}
+.dark .fi-ta-row,.dark .fi-ta-header{background:#14211b}
+.dark .fi-ta-row:nth-child(even){background:#17251e}
+.dark .fi-ta-cell,.dark .fi-ta-header-cell,.dark .fi-section-header-description,.dark .fi-fo-field-wrp-helper-text{color:#b5c0b8}
+.dark .fi-input-wrp,.dark .fi-select-input,.dark .fi-textarea-input,.dark .fi-fo-rich-editor{background:#0d1713;border-color:#38483d;color:#eff2ed}
+.dark .fi-btn-color-primary{background:#f3b832!important;color:#241c0c!important}
+.dark .fi-btn-color-primary:hover{background:#ffd36b}
+.dark .fi-sidebar-item-active .fi-sidebar-item-button{background:#1d2b22;color:#f3b832}
+.dark .fi-sidebar-item-active .fi-sidebar-item-icon{color:#f3b832}
+.dark .fi-breadcrumbs-item-label,.dark .fi-header-heading{color:#edf1ec}
+.dark .fi-wi-stats-overview-stat-value{color:#f3b832}
+.dark .fi-ta-pagination,.dark .fi-ta-empty-state{background:#14211b;border-color:#293a30;color:#aab7ae}
+
+/* Curseur carotte dans les panneaux Filament, sans remplacer le curseur de saisie */
+:root{--pbb-carrot-cursor:url("http://localhost:8000/images/cursor-carrot.png") 2 2, auto}
+body{cursor:var(--pbb-carrot-cursor)}
+a,button,[role=button],summary,.fi-btn,.fi-sidebar-item,.fi-ta-record-action,.fi-dropdown-list-item,input[type=button],input[type=submit],input[type=reset]{cursor:var(--pbb-carrot-cursor)!important}
+input:not([type=button]):not([type=submit]):not([type=reset]),textarea,[contenteditable=true]{cursor:text}

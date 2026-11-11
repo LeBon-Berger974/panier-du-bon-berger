@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/** @property array<int, array{produit_id: int, nom?: string, quantite?: float}>|null $composition */
 class PanierReservation extends Model
 {
     protected $fillable = [
@@ -26,6 +27,7 @@ class PanierReservation extends Model
         ];
     }
 
+    /** @return BelongsTo<Panier, $this> */
     public function panier(): BelongsTo
     {
         return $this->belongsTo(Panier::class);

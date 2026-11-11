@@ -1,0 +1,74 @@
+/* Réglages du compte : même palette sombre et dorée que la boutique */
+.pbb-settings-body{min-height:100vh;background:#0d1713!important;color:#e9eee9!important}
+.pbb-settings-body>header{min-height:66px;padding:12px max(24px,calc((100vw - 1040px)/2));background:#101b16;border-bottom:1px solid #293a30;box-shadow:none}
+.pbb-settings-body>header h1{margin:0;color:#f1f4ef;font-size:16px;font-weight:750}
+.pbb-settings-body>header nav a{border-color:#536256;color:#e9eee9}
+.pbb-settings-body>header nav a:hover{border-color:#d5a62f;background:#233329;color:#ffd166}
+.pbb-settings-body #profile-button{border:1px solid #536256;background:#1c2a21;color:#f2bd3c}
+.pbb-settings-body #profile-button:hover{border-color:#d5a62f;background:#2b3c30}
+.pbb-settings-body .site-page{min-height:calc(100vh - 66px);padding:30px 24px 56px;background:#0d1713;color:#e9eee9}
+.pbb-settings{max-width:1040px;margin:0 auto}
+.pbb-settings>div.relative{margin:0 auto 24px;padding:0}
+.pbb-settings [data-flux-heading]{color:#edf1ec!important}
+.pbb-settings [data-flux-subheading]{color:#9eaaa2!important}
+.pbb-settings-layout{gap:16px}
+.pbb-settings-nav,.pbb-settings-card{border-color:#293a30!important;background:#14211b!important;box-shadow:0 12px 32px #0002!important}
+.pbb-settings-nav{position:sticky;top:18px}
+.pbb-settings-nav h3{color:#c7a84e}
+.pbb-settings-nav nav a{color:#c0cbc3}
+.pbb-settings-nav nav a:hover{background:#1e3025;color:#f2f4ef}
+.pbb-settings-nav nav a.is-current{background:#25442e;color:#f3d273;box-shadow:inset 0 0 0 1px #476443}
+.pbb-settings-card{border-radius:12px!important;padding:clamp(20px,3vw,30px)!important}
+.pbb-settings-card [data-flux-heading]{color:#edf1ec!important}
+.pbb-settings-card [data-flux-subheading]{color:#9eaaa2!important}
+.pbb-settings [data-flux-label]{color:#d8e0d9!important}
+.pbb-settings [data-flux-control]{border-color:#38483d!important;background:#0d1713!important;color:#eff2ed!important;box-shadow:none!important}
+.pbb-settings [data-flux-control]::placeholder{color:#839187!important}
+.pbb-settings [data-flux-control]:focus{border-color:#d5a62f!important;outline:2px solid #d5a62f55!important;outline-offset:2px}
+.pbb-settings .pbb-profile-avatar{display:flex;align-items:center;gap:15px;margin:22px 0 26px;padding:15px;border:1px solid #293a30;border-radius:10px;background:#101b16}
+.pbb-settings .pbb-profile-avatar img,.pbb-settings .pbb-profile-avatar>div:first-child{width:64px;height:64px;flex:0 0 64px;border-radius:50%;object-fit:cover}
+.pbb-settings .pbb-profile-avatar>div:first-child{display:grid;place-items:center;border:1px solid #536256;background:#25442e;color:#f2bd3c;font-size:18px;font-weight:750}
+.pbb-settings .pbb-profile-avatar>.pbb-avatar-controls{display:grid;justify-items:start;gap:7px}
+.pbb-settings .pbb-profile-avatar strong{color:#edf1ec;font-size:13px}
+.pbb-settings .pbb-profile-avatar .pbb-avatar-controls>span{color:#9eaaa2;font-size:11px;line-height:1.5}
+.pbb-settings .pbb-avatar-upload{position:relative;display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border:1px solid #536256;border-radius:7px;background:#1c2a21;color:#f2bd3c;font-size:11px;font-weight:700;cursor:pointer}
+.pbb-settings .pbb-avatar-upload:hover{border-color:#d5a62f;background:#2b3c30}
+.pbb-settings .pbb-avatar-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.pbb-settings .pbb-avatar-remove{padding:0;border:0;background:transparent;color:#e5a6a1;font-size:11px;text-decoration:underline;cursor:pointer}
+.pbb-settings .pbb-avatar-error{color:#ffb4a9!important}
+.pbb-settings .pbb-profile-submit{border:0!important;background:#f3b832!important;color:#241c0c!important;font-weight:750}
+.pbb-settings .pbb-profile-submit:hover{background:#ffd36b!important}
+.pbb-settings [data-flux-link]{color:#e4ba52!important}
+.pbb-settings .pbb-settings-card [data-flux-heading]{color:#f3f5f1!important}
+.pbb-settings .pbb-settings-card [data-flux-subheading]{color:#c2ccc5!important}
+@media(max-width:760px){.pbb-settings-body>header{padding:12px 16px}.pbb-settings-body .site-page{padding:22px 16px 38px}.pbb-settings-layout{display:flex;flex-direction:column}.pbb-settings-nav{position:static;width:100%}.pbb-settings-card{width:100%}}
+
+.pbb-verify-card{display:grid;justify-items:center;gap:14px;width:100%;max-width:440px;margin:12px auto;padding:32px 30px;border:1px solid #293a30;border-radius:16px;background:#14211b;box-shadow:0 18px 50px #0004;text-align:center}
+.pbb-verify-icon{display:grid;place-items:center;width:58px;height:58px;border:1px solid #725d26;border-radius:50%;background:#2b291d;color:#f3b832;font-size:26px}
+.pbb-verify-eyebrow{margin:0;color:#d5ad46;font-size:10px;font-weight:750;letter-spacing:.14em;text-transform:uppercase}
+.pbb-verify-title{margin:0;color:#f3f5f1;font-size:24px;font-weight:750;line-height:1.2}
+.pbb-verify-copy{margin:0;color:#c2ccc5;font-size:13px;line-height:1.65}
+.pbb-verify-email{max-width:100%;margin:-7px 0;padding:9px 13px;border:1px solid #35483a;border-radius:8px;background:#101b16;color:#f3d273;font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.pbb-verify-card form{width:100%}
+.pbb-verify-card .pbb-button{min-height:44px}
+.pbb-verify-card .pbb-button{justify-content:center;border:0;background:#f3b832!important;color:#241c0c!important;font-weight:750}
+.pbb-verify-card .pbb-button:hover{background:#ffd36b!important}
+.pbb-verify-success,.pbb-verify-error,.pbb-verify-warning{width:100%;margin:0;padding:10px 12px;border:1px solid #3d6649;border-radius:8px;background:#182a1f;color:#b8e2bd;font-size:12px;line-height:1.5}
+.pbb-verify-error{border-color:#744b43;background:#30211f;color:#ffc4b8}
+.pbb-verify-warning{border-color:#74592a;background:#302817;color:#f4d48c}
+.pbb-verify-edit{color:#e4ba52;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.pbb-verify-logout{padding-top:12px;border-top:1px solid #293a30}
+.pbb-verify-logout button{border:0;background:transparent;color:#9eaaa2;font:inherit;font-size:12px;cursor:pointer}
+.pbb-verify-logout button:hover{color:#f2f4ef}
+@media(max-width:480px){.pbb-verify-card{padding:25px 20px}.pbb-verify-title{font-size:21px}}
+
+/* Menu du compte sur les pages de réglages : contraste renforcé sur le fond sombre */
+.pbb-settings-body #profile-menu{border-color:#35453a;background:#142019;color:#e3e9e3;box-shadow:0 16px 38px #0008}
+.pbb-settings-body #profile-menu>div{border-color:#304036}
+.pbb-settings-body #profile-menu .text-gray-800{color:#f1f4ef}
+.pbb-settings-body #profile-menu .text-gray-500{color:#bac5bd}
+.pbb-settings-body #profile-menu a.text-gray-700{color:#e3e9e3}
+.pbb-settings-body #profile-menu a.text-green-800{color:#e5c35e}
+.pbb-settings-body #profile-menu a:hover{background:#233329;color:#ffd166}
+.pbb-settings-body #profile-menu form button{color:#ffc2bd}
+.pbb-settings-body #profile-menu form button:hover{background:#3b2422;color:#ffc2bd}
